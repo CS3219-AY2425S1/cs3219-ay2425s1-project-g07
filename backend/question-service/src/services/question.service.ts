@@ -4,7 +4,7 @@ import {
     NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, isValidObjectId } from 'mongoose';
 import { CreateQuestionDto, UpdateQuestionDto, FilterQuestionsDto } from '../dto/question.dto';
 import { Question, QuestionDocument } from '../schemas/question.schema';
 
@@ -24,6 +24,7 @@ export class QuestionService {
     }
 
     async update(id: string, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
+        this.validateMongoId(id);
         if (updateQuestionDto.title && await this.hasQuestionWithTitleExceptId(updateQuestionDto.title, id)) {
             throw new ConflictException(`Question with title already exists`);
         }
@@ -39,6 +40,7 @@ export class QuestionService {
     }
 
     async findOne(id: string): Promise<Question> {
+        this.validateMongoId(id);
         const question = await this.questionModel.findById(id).exec();
         if (!question) {
             throw new NotFoundException(`Question with id ${id} not found`);
@@ -47,6 +49,7 @@ export class QuestionService {
     }
 
     async delete(id: string): Promise<Question> {
+        this.validateMongoId(id);
         const question = await this.questionModel.findByIdAndDelete(id).exec();
         if (!question) {
             throw new NotFoundException(`Question with id ${id} not found`);
@@ -99,6 +102,12 @@ export class QuestionService {
         }).exec();
 
         return res !== null && res !== undefined;
+    }
+
+    validateMongoId(id: string) {
+        if (!isValidObjectId(id)) {
+          throw new NotFoundException(`Question with id ${id} not found`);
+        }
     }
 
       // TODO: Link the question service to the user service
