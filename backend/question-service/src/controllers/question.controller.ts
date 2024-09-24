@@ -12,6 +12,7 @@ export class QuestionController {
     @ApiOperation({ summary: 'Create a new question' })
     @ApiResponse({ status: 201, type: Question })
     @Post()
+    @UsePipes(new ValidationPipe({ transform: true }))
     async create(@Body() createQuestionDto: CreateQuestionDto): Promise<Question> {
         return this.questionService.create(createQuestionDto);
     }
@@ -49,6 +50,7 @@ export class QuestionController {
     @ApiOperation({ summary: 'Update a question by id' })
     @ApiResponse({ status: 200, type: Question })
     @Put(':id')
+    @UsePipes(new ValidationPipe({ transform: true }))
     async update(@Param('id') id: string, @Body() updateQuestionDto: UpdateQuestionDto): Promise<Question> {
         return this.questionService.update(id, updateQuestionDto);
     }

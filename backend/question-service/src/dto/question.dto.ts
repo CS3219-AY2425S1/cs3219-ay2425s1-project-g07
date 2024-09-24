@@ -1,5 +1,12 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
-import { IsArray, IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import {
+    IsArray,
+    IsString,
+    IsNotEmpty,
+    IsEnum,
+    IsOptional,
+    ArrayNotEmpty,
+} from 'class-validator';
 import { QuestionComplexity, QuestionTopic } from '../schemas/question.schema';
 
 export class CreateQuestionDto {
@@ -14,6 +21,8 @@ export class CreateQuestionDto {
     readonly description: string;
 
     @ApiProperty()
+    @IsArray()
+    @ArrayNotEmpty()
     @IsEnum(QuestionTopic, { each: true })
     readonly topics: QuestionTopic[];
 
@@ -37,6 +46,7 @@ export class FilterQuestionsDto {
 
     @ApiProperty()
     @IsArray()
+    @ArrayNotEmpty()
     @IsOptional()
     @IsEnum(QuestionTopic, { each: true })
     readonly topics: QuestionTopic[];
