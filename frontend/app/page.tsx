@@ -8,7 +8,7 @@ const HomePage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    router.push('/login');
+    router.push('/questions');
   }, [router]);
 
   return null;

@@ -31,3 +31,5 @@
 3. Run the command `npm start` to start the Question Service in production mode, or use `npm start:dev` for development mode, which includes features like automatic server restart when you make code changes.
 
 4. Using applications like Postman, you can interact with the Question Service on port 8001.
+
+5. After starting the Question Service, you can access the documentation here [Api Documentation](http://localhost:8001/docs)

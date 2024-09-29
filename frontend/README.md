@@ -6,8 +6,6 @@
 frontend/
   ├── app/
   │   ├── layout.tsx            // Layout component
-  │   ├── error.tsx             // Error boundary component 
-  │   ├── not-found.tsx         // 404 page
   │   ├──(dashboard)/           // Route group to organise files without affecting the URL path structure.
   │   |   ├── layout.tsx        // Layout contains navigation bar shared across practice, profile and questions pages.
   |   |   ├── practice/         // http://localhost:3000/practice
@@ -50,31 +48,3 @@ frontend/
 
 Ensure you are in the frontend directory
 
-```sh
-docker build -t frontend .
-```
-
-## 2. Run the container
-
-macOS users:
-
-```sh
-docker run --name my-app -p 3000:3000 -v $(pwd):/app -d frontend
-```
-
-Windows users:
-
-```sh
-docker run --name my-app -p 3000:3000 -v %cd%:/app -d frontend
-```
-
-## 3. Access the application
-
-Open your web browser and navigate to [http://localhost:3000/signup](http://localhost:3000/signup)
-
-## 4. Terminate the application
-
-```sh
-docker stop my-app
-docker rm my-app
-```
