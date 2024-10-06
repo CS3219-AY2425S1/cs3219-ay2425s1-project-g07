@@ -7,22 +7,10 @@ services:
       build:
         context: ./frontend
         dockerfile: Dockerfile
-      # volumes:
-      #   - ./frontend:/app
+      volumes:
+        - ./frontend:/app
       ports:
         - "3000:3000"
-
-  api-gateway:
-    build: 
-      context: ./backend/api-gateway
-      dockerfile: Dockerfile.dev
-    environment:
-      QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
-      USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
-    ports:
-      - 8000:8000
-    # volumes:
-    #   - ./backend/api-gateway:/app
 
   question-app:
     build: 
