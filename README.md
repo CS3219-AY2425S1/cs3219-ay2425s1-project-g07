@@ -28,7 +28,14 @@ rm -rf backend/service_name/.git
 
 # Backend: Service - Port Bindings
 
+| Service          | Port  |
+| ---------------- | ----- |
+| API Gateway      | 8000  |
+| Question Service | 8001  |
+| MongoDB          | 27017⁠ |
+
+# Frontend - Port Bindings
+
 | Service          | Port |
 | ---------------- | ---- |
-| API Gateway      | 8000 |
-| Question Service | 8001 |
+| NextJS WebApp    | 3000 |

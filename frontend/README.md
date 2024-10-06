@@ -78,3 +78,5 @@ Open your web browser and navigate to [http://localhost:3000/signup](http://loca
 docker stop my-app
 docker rm my-app
 ```
+
+Admin Note: You can stop application by `docker stop my-app` and resume it by calling `docker rm my-app`
