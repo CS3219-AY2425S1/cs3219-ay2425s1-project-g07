@@ -6,10 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "start:port": "PORT=3001 next dev"
   },
   "dependencies": {
-    "@chakra-ui/icons": "^2.2.2",
+    "@chakra-ui/icons": "^2.2.4",
     "@chakra-ui/next-js": "^2.2.0",
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
