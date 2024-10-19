@@ -13,6 +13,7 @@ type UserEntry = {
   status: MatchStatus;
   topic: string;
   matchedWithUserId: string;
+  matchedTopic: string;
 }
 
 enum MessageAction {
@@ -98,7 +99,7 @@ export class MatchingService implements OnModuleInit {
     const allTopics = []
     for (const complexity of Object.values(QuestionComplexity)) {
       for (const topic of Object.values(QuestionTopic)) {
-      allTopics.push(`${complexity}-${topic}`);
+        allTopics.push(`${complexity}-${topic}`);
       }
     }
     await this.consumer.subscribe({ topics: allTopics, fromBeginning: false });
@@ -132,7 +133,55 @@ export class MatchingService implements OnModuleInit {
     });
   }
 
-  private async handleMatchRequest(topic: string, matchRequest: Message) {
+  private matchTopics(kafkaTopic1: string, kafkaTopic2: string): boolean {
+    if (kafkaTopic1 === kafkaTopic2) {
+      return true;
+    }
+
+    const questionDifficulty1 = kafkaTopic1.split('-')[0];
+    const questionTopic1 = kafkaTopic1.split('-')[1];
+
+    const questionDifficulty2 =kafkaTopic2.split('-')[0];
+    const questionTopic2 = kafkaTopic2.split('-')[1];
+
+    if (questionDifficulty1 === QuestionComplexity.ANY || questionDifficulty2 === QuestionComplexity.ANY) {
+      return questionTopic1 === questionTopic2 
+        || questionTopic1 === QuestionTopic.ANY 
+        || questionTopic2 === QuestionTopic.ANY;
+    }
+
+    if (questionTopic1 === QuestionTopic.ANY || questionTopic2 === QuestionTopic.ANY) {
+      // No need to check for any, because it would be caught in the guard clause above
+      return questionDifficulty1 === questionDifficulty2;
+    }
+
+    return false;
+  }
+
+  // Only called when matched
+  private getMatchedTopic(kafkaTopic1: string, kafkaTopic2: string): string {
+    if (kafkaTopic1 === kafkaTopic2) {
+      return kafkaTopic1;
+    }
+    // based off topic1, get as specific as possible
+    var matchedDifficulty = kafkaTopic1.split('-')[0];
+    var matchedTopic = kafkaTopic1.split('-')[1];
+
+    const questionDifficulty2 = kafkaTopic2.split('-')[0];
+    const questionTopic2 = kafkaTopic2.split('-')[1];
+
+    if (questionDifficulty2 !== QuestionComplexity.ANY) {
+      // matchedDifficulty is either the same as questionDifficulty2 or is ANY
+      matchedDifficulty = questionDifficulty2;
+    }
+    if (questionTopic2 !== QuestionTopic.ANY) {
+      matchedTopic = questionTopic2;
+    }
+     
+    return `${matchedDifficulty}-${matchedTopic}`;
+  }
+
+  private async handleMatchRequest(kafkaTopic: string, matchRequest: Message) {
       const requesterUserId = matchRequest.userId;
 
       // Check if this is a duplicate request
@@ -141,30 +190,36 @@ export class MatchingService implements OnModuleInit {
         return;
       }
 
-      console.log(`Received match request: ${matchRequest} on topic: ${topic}`);
+      console.log(`Received match request: ${matchRequest} on topic: ${kafkaTopic}`);
 
       // Check if a matching user exists
       const existingMatch = Object.keys(this.userPool).find(
-        (userId) => this.userPool[userId].topic === topic // Find a user with the same topic
+        (userId) => 
+          // Find a user with the same topic, or either has 'any' topic
+          this.matchTopics(this.userPool[userId].topic, kafkaTopic)
           && this.userPool[userId].status == MatchStatus.PENDING // Ensure the user is waiting for a match
           && userId !== requesterUserId // Ensure the user is not the requester
       );
 
       if (existingMatch) {
         // Pair the users if match is found
+        const matchedTopic = this.getMatchedTopic(this.userPool[existingMatch].topic, kafkaTopic);
         this.userPool[existingMatch].matchedWithUserId = requesterUserId;
         this.userPool[existingMatch].status = MatchStatus.MATCHED;
+        this.userPool[existingMatch].matchedTopic = matchedTopic;
         this.userPool[requesterUserId] = {
           status: MatchStatus.MATCHED,
-          topic: topic,
+          topic: kafkaTopic,
           matchedWithUserId: existingMatch,
+          matchedTopic: matchedTopic,
         };
-        console.log(`Match found for ${requesterUserId} and ${existingMatch} in topic: ${topic}`);
+        console.log(`Match found for ${requesterUserId} and ${existingMatch} in topic: ${kafkaTopic}`);
       } else {
         this.userPool[requesterUserId] = {
           status: MatchStatus.PENDING,
-          topic: topic,
+          topic: kafkaTopic,
           matchedWithUserId: '',
+          matchedTopic: '',
         }
       }
   }
