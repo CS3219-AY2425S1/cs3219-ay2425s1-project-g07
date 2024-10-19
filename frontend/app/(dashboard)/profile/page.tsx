@@ -160,7 +160,7 @@ export default function ProfilePage() {
                 </Tag>
                 <Tag
                   size="md"
-                  key="easy-tag"
+                  key="hard-tag"
                   variant="solid"
                   colorScheme="orange"
                   justifyContent={"center"}
