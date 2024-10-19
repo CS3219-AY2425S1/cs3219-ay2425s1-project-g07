@@ -21,7 +21,7 @@ import {
   cancelMatchRequest,
   makeMatchRequest,
 } from "@/services/matchingService";
-import { MatchStatus } from "@/types/Match";
+import { ANY_TOPIC } from "@/types/Match";
 import useAuth from "@/hooks/useAuth";
 
 export default function CreateQuestionPage() {
@@ -31,7 +31,9 @@ export default function CreateQuestionPage() {
 
   const MATCH_DURATION = 30;
 
-  const [topic, setTopic] = useState<QuestionTopic | undefined>();
+  const [topic, setTopic] = useState<
+    QuestionTopic | typeof ANY_TOPIC | undefined
+  >();
   const [complexity, setComplexity] = useState<
     QuestionComplexity | undefined
   >();
@@ -49,8 +51,11 @@ export default function CreateQuestionPage() {
   const [checkMatchInterval, setCheckMatchInterval] =
     useState<NodeJS.Timeout | null>(null);
 
-  const handleTopicChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-    setTopic(e.target.value as QuestionTopic);
+  const handleTopicChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setTopic(val == ANY_TOPIC ? ANY_TOPIC : (val as QuestionTopic));
+  };
+
   const handleComplexityChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
     setComplexity(e.target.value as QuestionComplexity);
 
@@ -216,6 +221,12 @@ export default function CreateQuestionPage() {
             <option value="" disabled>
               Select a topic
             </option>
+            {
+              //Add the any selection value
+              <option key={ANY_TOPIC} value={ANY_TOPIC}>
+                {ANY_TOPIC}
+              </option>
+            }
             {Object.values(QuestionTopic).map((topic) => (
               <option key={topic} value={topic}>
                 {topic}

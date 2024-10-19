@@ -4,7 +4,8 @@ import {
   MatchResponse,
   CheckMatchResponse,
   CheckMatchResponseError,
-} from "../types/Match";
+  ANY_TOPIC,
+} from "@/types/Match";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8002",
