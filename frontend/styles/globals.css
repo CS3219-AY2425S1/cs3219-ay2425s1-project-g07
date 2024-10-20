@@ -1,0 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.logo-text {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 30px;
+  font-weight: 700;
+  color: white;
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+  background-color: #f4f4f4;
+  padding: 2px 4px;
+  border-radius: 5px;
+}
