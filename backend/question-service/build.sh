@@ -11,6 +11,6 @@ fi
 
 image="asia-southeast1-docker.pkg.dev/cs3219-peerprep-436507/peerprep/question-service:${version}"
 
-docker build -t $image -f Dockerfile.dev
+docker build -t $image -f ./Dockerfile.dev
 
 docker push $image
