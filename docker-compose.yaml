@@ -7,8 +7,13 @@ services:
       build:
         context: ./frontend
         dockerfile: Dockerfile
-      # volumes:
-      #   - ./frontend:/app
+      environment:
+        NEXT_PUBLIC_API_GATEWAY_DOMAIN: ${API_GATEWAY_DOMAIN}
+        NEXT_PUBLIC_QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+        NEXT_PUBLIC_USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
+        NEXT_PUBLIC_MATCHING_SERVICE_DOMAIN: ${MATCHING_SERVICE_DOMAIN}
+      volumes:
+        - ./frontend:/app
       ports:
         - "3000:3000"
 
@@ -19,10 +24,11 @@ services:
     environment:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
       USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
+      MATCHING_SERVICE_DOMAIN: ${MATCHING_SERVICE_DOMAIN}
     ports:
       - 8000:8000
-    # volumes:
-    #   - ./backend/api-gateway:/app
+    volumes:
+      - ./backend/api-gateway:/app
 
   question-app:
     build: 
