@@ -7,7 +7,7 @@ import {
 } from "../types/Match";
 
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8002",
+  baseURL: process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || process.env.NEXT_PUBLIC_MATCHING_SERVICE_DOMAIN || "http://localhost:8002",
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",

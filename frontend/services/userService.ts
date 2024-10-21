@@ -1,8 +1,10 @@
 import axios from 'axios';
 
+const baseDomain = process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || process.env.NEXT_PUBLIC_USER_SERVICE_DOMAIN || "http://localhost:8003"
+
 export const createUser = async (username: string, email: string, password: string) => {
   try {
-    await axios.post('http://localhost:8003/users', { username, email, password });
+    await axios.post(`${baseDomain}/users`, { username, email, password });
   } catch (error) {
     console.error('Error creating user:', error);
     throw error; 
@@ -11,7 +13,7 @@ export const createUser = async (username: string, email: string, password: stri
 
 export const loginUser = async (email: string, password: string) => {
   try {
-    const response = await axios.post('http://localhost:8003/auth/login', { email, password });
+    const response = await axios.post(`${baseDomain}/auth/login`, { email, password });
     const { accessToken } = response.data.data;
     localStorage.setItem('authToken', accessToken);
   } catch (error) {
@@ -31,7 +33,7 @@ export const verifyToken = async () => {
     return false;
   }
   try {
-    const response = await axios.get('http://localhost:8003/auth/verify-token', {
+    const response = await axios.get(`${baseDomain}/auth/verify-token`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -50,7 +52,7 @@ export const deleteUser = async (userId: string) => {
     return false;
   }
   try {
-    const response = await axios.delete(`http://localhost:8003/users/${userId}`, {
+    const response = await axios.delete(`${baseDomain}/users/${userId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
@@ -68,7 +70,7 @@ export const deleteUser = async (userId: string) => {
 export const updateUser = async (userId: string, userData: { username?: string; email?: string; password?: string }) => {
   try {
     const accessToken = localStorage.getItem('authToken');
-    const response = await axios.patch(`http://localhost:8003/users/${userId}`, userData, {
+    const response = await axios.patch(`${baseDomain}/users/${userId}`, userData, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
