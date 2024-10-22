@@ -8,6 +8,7 @@ export class GatewayController {
   private readonly questionServiceDomain: string;
   private readonly userServiceDomain: string;
   private readonly matchingServiceDomain: string;
+  private readonly collabServiceDomain: string;
 
   constructor(
     private readonly gatewayService: GatewayService,
@@ -16,6 +17,7 @@ export class GatewayController {
     this.questionServiceDomain = this.configService.get<string>('QUESTION_SERVICE_DOMAIN');
     this.userServiceDomain = this.configService.get<string>('USER_SERVICE_DOMAIN');
     this.matchingServiceDomain = this.configService.get<string>('MATCHING_SERVICE_DOMAIN');
+    this.collabServiceDomain = this.configService.get<string>('COLLAB_SERVICE_DOMAIN');
   }
 
   @All('/')
@@ -51,6 +53,13 @@ export class GatewayController {
   @Get('check-match*')
   async handleCheckMatchRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
     this.gatewayService.handleRedirectRequest(req, res, this.matchingServiceDomain)
+  }
+
+  // Collab service 
+  @All('collab*')
+  redirectToBackend(@Res() res: Response) {
+    // redirect works on browser (to be tested)
+    res.redirect(this.collabServiceDomain);
   }
 
 }
