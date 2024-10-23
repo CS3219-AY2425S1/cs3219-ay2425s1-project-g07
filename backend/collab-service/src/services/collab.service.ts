@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import * as Y from 'yjs';
 import { Room, RoomResponse } from '../interfaces/room.interface';
 import axios from 'axios';
+import { Question } from '../interfaces/room.interface';
 
 @Injectable()
 export class CollabService {
@@ -12,17 +13,23 @@ export class CollabService {
   constructor(private configService: ConfigService) {
     this.cleanUpEmptyRooms();
     // Create a default room for testing
-    this.createRoom('default');
+    this.createRoom('default', 'any', 'any');
   }
 
-  createRoom(roomId: string): RoomResponse | null {
+  async createRoom(roomId: string, topic: string, difficulty: string): Promise<RoomResponse> {
     if (this.rooms.has(roomId)) {
       return null;
+    }
+
+    const question = await this.getQuestion(topic, difficulty);
+    if (!question) {
+      return null
     }
 
     const room: Room = {
       id: roomId,
       users: new Set(),
+      questionId: question._id,
       doc: new Y.Doc()
     };
 
@@ -31,6 +38,7 @@ export class CollabService {
     return {
         id: room.id,
         users: Array.from(room.users),
+        questionId: room.questionId,
         doc: room.doc.guid
     };
   }
@@ -48,6 +56,7 @@ export class CollabService {
     return {
         id: room.id,
         users: Array.from(room.users),
+        questionId: room.questionId,
         doc: room.doc.guid
     };
   }
@@ -66,6 +75,7 @@ export class CollabService {
     return {
         id: room.id,
         users: Array.from(room.users),
+        questionId: room.questionId,
         doc: room.doc.guid
     };
   }
@@ -74,6 +84,7 @@ export class CollabService {
     return Array.from(this.rooms.values()).map(room => ({
         id: room.id,
         users: Array.from(room.users),
+        questionId: room.questionId,
         doc: room.doc.guid
     }));
   }
@@ -95,6 +106,7 @@ export class CollabService {
         {
             id: room.id,
             users: Array.from(room.users),
+            questionId: room.questionId,
             doc: room.doc.guid
         } : null;
   }
@@ -106,6 +118,7 @@ export class CollabService {
         return {
             id: room.id,
             users: Array.from(room.users),
+            questionId: room.questionId,
             doc: room.doc.guid
         };
     }
@@ -123,7 +136,7 @@ export class CollabService {
     }, 5 * 60 * 1000); // 5 minutes in milliseconds
   }
 
-  async getQuestion(topic: string, difficulty: string) {
+  private async getQuestion(topic: string, difficulty: string): Promise<Question> {
     let queryTopic: string, queryDifficulty: string;
     if (topic != 'any') {
         queryTopic = topic;
@@ -131,12 +144,11 @@ export class CollabService {
     if (difficulty != 'any') {
         queryDifficulty = difficulty;
     }
-    // const questionServiceUrl = this.configService.get('QUESTION_SERVICE_DOMAIN');
-    const questionServiceUrl = 'http://localhost:8001';
+    const questionServiceUrl = this.configService.get('QUESTION_SERVICE_DOMAIN');
     const response = await axios.get(`${questionServiceUrl}/question/random`, {
       params: { topic: queryTopic, difficulty: queryDifficulty }
     });
-    return response.data;
+    return response.data as Question;
   }
 
 }
