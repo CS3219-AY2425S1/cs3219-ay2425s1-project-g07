@@ -3,14 +3,14 @@ import * as Y from 'yjs';
 export interface Room {
     id: string;
     users: Set<string>;
-    questionId: string,
+    question: Question;
     doc: Y.Doc;
 }
 
 export class RoomResponse {
     id: string;
     users: string[];
-    questionId: string;
+    question: Question;
     doc: string;
 }
 

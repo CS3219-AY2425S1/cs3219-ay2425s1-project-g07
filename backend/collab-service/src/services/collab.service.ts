@@ -29,7 +29,7 @@ export class CollabService {
     const room: Room = {
       id: roomId,
       users: new Set(),
-      questionId: question._id,
+      question: question,
       doc: new Y.Doc()
     };
 
@@ -38,7 +38,7 @@ export class CollabService {
     return {
         id: room.id,
         users: Array.from(room.users),
-        questionId: room.questionId,
+        question: room.question,
         doc: room.doc.guid
     };
   }
@@ -56,7 +56,7 @@ export class CollabService {
     return {
         id: room.id,
         users: Array.from(room.users),
-        questionId: room.questionId,
+        question: room.question,
         doc: room.doc.guid
     };
   }
@@ -75,7 +75,7 @@ export class CollabService {
     return {
         id: room.id,
         users: Array.from(room.users),
-        questionId: room.questionId,
+        question: room.question,
         doc: room.doc.guid
     };
   }
@@ -84,7 +84,7 @@ export class CollabService {
     return Array.from(this.rooms.values()).map(room => ({
         id: room.id,
         users: Array.from(room.users),
-        questionId: room.questionId,
+        question: room.question,
         doc: room.doc.guid
     }));
   }
@@ -101,12 +101,11 @@ export class CollabService {
 
   getRoom(roomId: string): RoomResponse | null {
     const room = this.rooms.get(roomId);
-    console.log("room:", room);
     return room ? 
         {
             id: room.id,
             users: Array.from(room.users),
-            questionId: room.questionId,
+            question: room.question,
             doc: room.doc.guid
         } : null;
   }
@@ -118,7 +117,7 @@ export class CollabService {
         return {
             id: room.id,
             users: Array.from(room.users),
-            questionId: room.questionId,
+            question: room.question,
             doc: room.doc.guid
         };
     }
@@ -128,7 +127,7 @@ export class CollabService {
   private cleanUpEmptyRooms() {
     setInterval(() => {
       this.rooms.forEach((room, roomId) => {
-        if (room.users.size === 0) {
+        if (room.users.size === 0 && roomId !== 'default') {
           console.log(`Cleaning up room ${roomId}`);
           this.rooms.delete(roomId);
         }
