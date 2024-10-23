@@ -24,7 +24,7 @@ import {
 import { MatchStatus } from "@/types/Match";
 import useAuth from "@/hooks/useAuth";
 
-export default function CreateQuestionPage() {
+export default function MatchingPage() {
   const toast = useToast();
 
   const { username } = useAuth();
