@@ -14,11 +14,13 @@ import {
   Grid,
 } from "@chakra-ui/react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { QuestionComplexity, QuestionTopic } from "@/types/Question";
 import {
   cancelMatchRequest, getMatchSocket,
   makeMatchRequest,
 } from '@/services/matchingService';
+import { getRoom } from "@/services/collabService";
 import useAuth from "@/hooks/useAuth";
 import {
   MatchRequestResponse,
@@ -28,7 +30,7 @@ import { Socket } from 'socket.io-client';
 
 export default function MatchingPage() {
   const toast = useToast();
-
+  const router = useRouter();
   const { username } = useAuth();
 
   const MATCH_DURATION = 30;
@@ -158,6 +160,7 @@ export default function MatchingPage() {
         isClosable: true,
         position: "top",
       });
+      handleFoundMatch(matchFound.matchedRoom);
 
       // Handle match found logic here
       setIsMatched(true);
@@ -198,6 +201,18 @@ export default function MatchingPage() {
 
     cancelMatchRequest(checkMatchSocket);
   };
+
+  const handleFoundMatch = (roomId: string) => {
+    // Verify that room exists
+    setTimeout(async () => {
+      try {
+        const room = await getRoom(roomId);
+      } catch (error) {
+        console.error("Error getting room:", error);
+        return;
+      }
+    }, 3000);
+  }
 
   return (
     <Flex justifyContent="center" h="100%">
@@ -317,6 +332,14 @@ export default function MatchingPage() {
                   <Text fontSize="lg" color="teal.500">
                     {roomId}
                   </Text>
+                </GridItem>
+                <GridItem colSpan={2} textAlign="center">
+                  <Button
+                  colorScheme="teal"
+                  onClick={() => router.push(`/rooms/${roomId}`)}
+                  >
+                  Go to Code
+                  </Button>
                 </GridItem>
               </Grid>
             </Box>

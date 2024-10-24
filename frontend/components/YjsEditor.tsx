@@ -66,9 +66,16 @@ const YjsEditor = (
       roomId,
       ydoc,
       {
-        params: { userId }
+      maxBackoffTime: 4000,
+      params: { userId }
       }
     );
+
+    // setTimeout(() => {
+    //   setProvider(provider);
+    //   provider.awareness.setLocalStateField('user', currentUser);
+    //   provider.awareness.setLocalStateField('cursor', { lineNumber: 1, column: 1 });
+    // }, 1000);
     setProvider(provider);
     provider.awareness.setLocalStateField('user', currentUser);
     provider.awareness.setLocalStateField('cursor', {lineNumber: 1, column: 1});
@@ -82,26 +89,26 @@ const YjsEditor = (
     const handleDisconnect = () => {
       console.log("Disconnected from room: ", roomId);
       setConnectedToRoom(false);
-      provider.shouldConnect = false;
       onConnectionChange?.('disconnected');
     }
 
     const handleConnectError = () => {
       console.log("Error connecting to room: ", roomId);
       setConnectedToRoom(false);
+      provider.shouldConnect = false;
       onConnectionChange?.('disconnected');
     }
 
     // Add connection event listeners
     provider.on('status', ({ status }: { status: string }) => {
+      console.log("Connection status: ", status);
       if (status === 'connected') {
         handleConnection();
       } else if (status === 'disconnected') {
-        handleDisconnect();
+        window.location.reload();
       }
     });
 
-    provider.on('connection-close', handleDisconnect); 
     provider.on('connection-error', handleConnectError); 
 
     const handleAwarenessChange = () => {
@@ -234,7 +241,7 @@ const YjsEditor = (
     return () => {
       binding.destroy();
     }
-  }, [ydoc, provider, editor, connectedToRoom]);
+  }, [ydoc, provider, editor]);
 
   // This effect listens for the Shift + Enter key combination to run the code
   useEffect(() => {
