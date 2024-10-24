@@ -18,7 +18,13 @@ export class CollabService {
 
   async createRoom(roomId: string, topic: string, difficulty: string): Promise<RoomResponse> {
     if (this.rooms.has(roomId)) {
-      return null;
+      const room = this.rooms.get(roomId);
+      return {
+        id: room.id,
+        users: Array.from(room.users),
+        question: room.question,
+        doc: room.doc.guid
+      };
     }
 
     const question = await this.getQuestion(topic, difficulty);
