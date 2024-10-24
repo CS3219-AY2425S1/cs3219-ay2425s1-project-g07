@@ -7,7 +7,6 @@ import { WebsocketProvider } from 'y-websocket';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
 import { Button, Flex, Textarea } from '@chakra-ui/react';
-import { color } from 'framer-motion';
 
 interface User {
   id: string;
@@ -23,13 +22,32 @@ interface AwarenessUser {
 
 const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4']
 
+self.MonacoEnvironment = {
+  getWorkerUrl: function (moduleId, label) {
+    if (label === 'json') {
+      return '_next/static/json.worker.js';
+    }
+    if (label === 'css' || label === 'scss' || label === 'less') {
+      return '_next/static/css.worker.js';
+    }
+    if (label === 'html' || label === 'handlebars' || label === 'razor') {
+      return '_next/static/html.worker.js';
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return '_next/static/ts.worker.js';
+    }
+    return '_next/static/editor.worker.js';
+  }
+};
+
 const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
   const ydoc = useMemo(() => new Y.Doc(), []);
-  const [editor, setEditor] = useState<any | null>(null);
+  const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
   const [binding, setBinding] = useState<MonacoBinding | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<AwarenessUser[]>([]);
   const cursorsRef = useRef<Map<string, string[]>>(new Map());
+  const [codeOutput, setCodeOutput] = useState<string>(''); 
 
   // Generate a User for this client
   const currentUser = useMemo(() => ({
@@ -71,6 +89,7 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
     };
   }, [ydoc]);
 
+  // This effect manages the cursor and selection of users in the editor
   useEffect(() => {
     if (!editor || !provider) {
       console.log("Editor or provider not ready yet");
@@ -182,6 +201,33 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
     }
   }, [ydoc, provider, editor]);
 
+  // This effect listens for the Shift + Enter key combination to run the code
+  useEffect(() => {
+    if (editor) {
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+        runCode();
+      });
+    }
+  }, [editor]);
+
+  const runCode = () => {
+    if (editor) {
+      const code = editor.getModel()?.getValue() || '';
+      try {
+        const log: string[] = [];
+        const originalConsoleLog = console.log;
+        console.log = (...args) => {
+          log.push(args.join(' '));
+        };
+        eval(code);
+        console.log = originalConsoleLog;
+        setCodeOutput(log.join('\n'));
+      } catch (error) {
+        setCodeOutput((error as Error).toString());
+      }
+    }
+  };
+
   return (
     <Flex direction="column" className='h-full'>
       <Editor
@@ -195,7 +241,7 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
           automaticLayout: true
         }}
       />
-      <Textarea flex="0 0 20%" backgroundColor="#f5f5f5" placeholder='Your code output will be shown here.' readOnly />
+      <Textarea flex="0 0 20%" backgroundColor="#f5f5f5" placeholder='Your code output will be shown here.' value={codeOutput} readOnly />
       <Flex justify="space-between" align="center" width="100%" padding="20px">
         <div className="flex flex-wrap gap-2">
           {connectedUsers.length != 0 ? connectedUsers.map(({ user }) => (
@@ -214,7 +260,7 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
             <span>No connected users</span>
           )}
         </div>
-        <Button alignSelf="flex-end" margin="10px">Run Code</Button>
+        <Button alignSelf="flex-end" margin="10px" onClick={runCode}>Run</Button>
       </Flex>
     </Flex>
   );
