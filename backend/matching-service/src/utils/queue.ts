@@ -60,4 +60,13 @@ export class Queue<T> {
     size(): number {
         return this.items.length;
     }
+
+    async print() {
+        const release = await this.mutex.acquire();
+        try {
+            console.log(this.items);
+        } finally {
+            release();
+        }
+    }
 }

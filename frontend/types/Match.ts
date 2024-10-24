@@ -8,27 +8,20 @@ export type MatchRequest = {
   timestamp: number;
 };
 
-export type MatchResponse = {
+export type MatchRequestResponse = {
   message: string;
   error?: string;
+  expiry?: number;
 };
 
-export type MatchStatus = "PENDING" | "MATCHED" | "CANCELLED" | "NONE";
-
-//TODO: request to standarise the responses to be sent by the backend
-
-export type CheckMatchResponse = {
-  userId: string;
-  status: MatchStatus;
-  topic: string;
+export type MatchFoundResponse = {
   matchedWithUserId: string;
   matchedTopic: string;
   matchedRoom: string;
-  createTime: number;
-  expiryTime: number;
 };
 
-export type CheckMatchResponseError = {
-  status: "NONE";
-  message: string;
-};
+export type MatchResult = {
+  result: 'success' | 'timeout' | 'error';
+  error?: string;
+  matchFound?: MatchFoundResponse;
+}

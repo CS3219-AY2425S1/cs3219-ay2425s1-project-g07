@@ -50,6 +50,18 @@ services:
     # volumes:
     #   - ./backend/matching-service:/app
 
+  matching-websocket:
+    build:
+      context: ./backend/matching-websocket-service
+      dockerfile: Dockerfile.dev
+    environment:
+      KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
+      MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID}
+    depends_on:
+      - kafka
+    ports:
+      - 8008:8008
+
   collab-app:
     build: 
       context: ./backend/collab-service

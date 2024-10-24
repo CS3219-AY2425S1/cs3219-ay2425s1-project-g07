@@ -1,10 +1,10 @@
 import axios from "axios";
+import { io, Socket } from 'socket.io-client';
 import {
   MatchRequest,
-  MatchResponse,
-  CheckMatchResponse,
-  CheckMatchResponseError,
-} from "../types/Match";
+  MatchRequestResponse,
+  MatchFoundResponse, MatchResult,
+} from '../types/Match';
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8002",
@@ -24,39 +24,45 @@ export const testSend = async () => {
   }
 };
 
+export const getMatchSocket = () => {
+  return io(`ws://localhost:${process.env.MATCHING_WEBSOCKET_SERVICE_PORT ?? 8008}`, {
+    reconnection: false,
+    timeout: 3000,
+  });
+}
+
 export const makeMatchRequest = async (
-  matchRequest: MatchRequest
-): Promise<MatchResponse> => {
+  socket: Socket,
+  matchRequest: MatchRequest,
+  onRequestMade: (response: MatchRequestResponse) => void,
+): Promise<MatchResult> => {
   try {
-    const response = await axiosInstance.post("/match", matchRequest);
-    return response.data as MatchResponse;
+    const matchFoundResponse = new Promise<MatchResult>((resolve) => {
+      socket.once("matchRequestResponse", (response: MatchRequestResponse) => {
+        onRequestMade(response);
+        if (response.error) {
+          resolve({ result: 'error', error: response.error });
+        }
+      });
+      socket.once("noMatchFound", () => {
+        resolve({ result: 'timeout' });
+      });
+      socket.once("matchFound", (res: MatchFoundResponse) => {
+        resolve({ result: 'success', matchFound: res });
+      });
+    });
+    socket.emit("matchRequest", matchRequest);
+    console.log("Sent match request:", matchRequest);
+    return matchFoundResponse;
   } catch (error) {
     console.error("Error sending match request:", error);
     throw error;
   }
 };
 
-export const cancelMatchRequest = async (
-  matchRequest: MatchRequest
-): Promise<MatchResponse> => {
-  try {
-    const response = await axiosInstance.post("/cancel-match", matchRequest);
-    return response.data as MatchResponse;
-  } catch (error) {
-    console.error("Error sending cancel match request:", error);
-    throw error;
-  }
-};
-
-export const checkMatch = async (
-  userId: string
-): Promise<CheckMatchResponse | CheckMatchResponseError> => {
-  try {
-    const response = await axiosInstance.get(`/check-match?userId=${userId}`);
-
-    return response.data as CheckMatchResponse | CheckMatchResponseError;
-  } catch (error) {
-    console.error("Error checking match:", error);
-    throw error;
-  }
+export const cancelMatchRequest = (
+  socket: Socket
+) => {
+  socket.disconnect();
+  console.log("Cancelled match request");
 };
