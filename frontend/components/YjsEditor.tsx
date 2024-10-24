@@ -6,7 +6,7 @@ import * as monaco from 'monaco-editor'
 import { WebsocketProvider } from 'y-websocket';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
-import { Button, Flex, Textarea } from '@chakra-ui/react';
+import { Button, Flex, Text, Textarea, Spinner } from '@chakra-ui/react';
 
 interface User {
   id: string;
@@ -40,8 +40,12 @@ self.MonacoEnvironment = {
   }
 };
 
-const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
+const YjsEditor = (
+  { userId, roomId, onConnectionChange }: 
+  { userId: string, roomId: string, onConnectionChange?: (status: 'connected' | 'disconnected') => void }
+) => {
   const ydoc = useMemo(() => new Y.Doc(), []);
+  const [connectedToRoom, setConnectedToRoom] = useState(false);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
   const [binding, setBinding] = useState<MonacoBinding | null>(null);
@@ -68,6 +72,37 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
     setProvider(provider);
     provider.awareness.setLocalStateField('user', currentUser);
     provider.awareness.setLocalStateField('cursor', {lineNumber: 1, column: 1});
+
+    const handleConnection = () => {
+      console.log("Connected to room: ", roomId);
+      setConnectedToRoom(true);
+      onConnectionChange?.('connected');
+    }
+
+    const handleDisconnect = () => {
+      console.log("Disconnected from room: ", roomId);
+      setConnectedToRoom(false);
+      provider.shouldConnect = false;
+      onConnectionChange?.('disconnected');
+    }
+
+    const handleConnectError = () => {
+      console.log("Error connecting to room: ", roomId);
+      setConnectedToRoom(false);
+      onConnectionChange?.('disconnected');
+    }
+
+    // Add connection event listeners
+    provider.on('status', ({ status }: { status: string }) => {
+      if (status === 'connected') {
+        handleConnection();
+      } else if (status === 'disconnected') {
+        handleDisconnect();
+      }
+    });
+
+    provider.on('connection-close', handleDisconnect); 
+    provider.on('connection-error', handleConnectError); 
 
     const handleAwarenessChange = () => {
       const states = Array.from(provider.awareness.getStates().values());
@@ -199,7 +234,7 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
     return () => {
       binding.destroy();
     }
-  }, [ydoc, provider, editor]);
+  }, [ydoc, provider, editor, connectedToRoom]);
 
   // This effect listens for the Shift + Enter key combination to run the code
   useEffect(() => {
@@ -229,40 +264,48 @@ const YjsEditor = ({ userId, roomId }: { userId: string, roomId: string }) => {
   };
 
   return (
-    <Flex direction="column" className='h-full'>
-      <Editor
-        height="100%"
-        defaultValue="// some comment"
-        theme='vs-dark'
-        defaultLanguage="javascript"
-        onMount={editor => { setEditor(editor) }}
-        options={{
-          minimap: { enabled: false },
-          automaticLayout: true
-        }}
-      />
-      <Textarea flex="0 0 20%" backgroundColor="#f5f5f5" placeholder='Your code output will be shown here.' value={codeOutput} readOnly />
-      <Flex justify="space-between" align="center" width="100%" padding="20px">
-        <div className="flex flex-wrap gap-2">
-          {connectedUsers.length != 0 ? connectedUsers.map(({ user }) => (
-            <div
-              key={user.id}
-              className="flex items-center gap-2 px-3 py-1 rounded-full"
-              style={{ backgroundColor: user.color + '20', border: `2px solid ${user.color}` }}
-            >
+     connectedToRoom ? (
+      <Flex direction="column" className='h-full'>
+        <Editor
+          height="100%"
+          defaultValue="// some comment"
+          theme='vs-dark'
+          defaultLanguage="javascript"
+          onMount={editor => { setEditor(editor) }}
+          options={{
+            minimap: { enabled: false },
+            automaticLayout: true
+          }}
+        />
+        <Textarea flex="0 0 20%" backgroundColor="#f5f5f5" placeholder='Your code output will be shown here.' value={codeOutput} readOnly />
+        <Flex justify="space-between" align="center" width="100%" padding="20px">
+          <div className="flex flex-wrap gap-2">
+            {connectedUsers.length != 0 ? connectedUsers.map(({ user }) => (
               <div
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: user.color }}
-              />
-              <span>{user.id}</span>
-            </div>
-          )) : (
-            <span>No connected users</span>
-          )}
-        </div>
-        <Button alignSelf="flex-end" margin="10px" onClick={runCode}>Run</Button>
+                key={user.id}
+                className="flex items-center gap-2 px-3 py-1 rounded-full"
+                style={{ backgroundColor: user.color + '20', border: `2px solid ${user.color}` }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: user.color }}
+                />
+                <span>{user.id}</span>
+              </div>
+            )) : (
+              <span>No connected users</span>
+            )}
+          </div>
+          <Button alignSelf="flex-end" margin="10px" onClick={runCode}>Run</Button>
+        </Flex>
       </Flex>
-    </Flex>
+    ) : (
+      <div className="flex flex-col justify-center items-center h-full">
+        <Spinner size='xl' m={5}/>
+        <Text>Connecting to room...</Text>
+      </div>
+    )
+
   );
 }
 
