@@ -24,13 +24,13 @@ self.MonacoEnvironment = {
 
 type PageParams = {
   params: {
-    id: string;
+    roomId: string;
   };
   editorRef: React.RefObject<HTMLDivElement>;
 };
 
 export default function CodeEditor({ params, editorRef }: PageParams) {
-  const { id } = params;
+  const { roomId } = params;
   const [output, setOutput] = useState<string>('');
   const editorInstanceRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
@@ -38,7 +38,7 @@ export default function CodeEditor({ params, editorRef }: PageParams) {
     if (editorRef.current) {
       editorInstanceRef.current = monaco.editor.create(editorRef.current, {
         value: [
-          `// Content based on id: ${id}`,
+          `// Content based on roomId: ${roomId}`,
           'function main() {',
           '\tconsole.log("hello world");',
           '}',
@@ -63,7 +63,7 @@ export default function CodeEditor({ params, editorRef }: PageParams) {
         editorInstanceRef.current?.dispose();
       };
     }
-  }, [id, editorRef]);
+  }, [roomId, editorRef]);
 
   const runCode = () => {
     if (editorRef.current) {
@@ -84,7 +84,7 @@ export default function CodeEditor({ params, editorRef }: PageParams) {
   };
 
   return (
-    <Flex direction="column" height="100%">
+    <Flex direction="column" className='h-full'>
       <Box ref={editorRef} flex="1" />
       <Textarea flex="0 0 20%" backgroundColor="#f5f5f5" value={output} readOnly />
       <Button onClick={runCode} alignSelf="flex-end" margin="10px">Run Code</Button>

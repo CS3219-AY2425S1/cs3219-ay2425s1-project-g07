@@ -57,10 +57,13 @@ services:
     environment:
       KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
       MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID}
+      COLLAB_SERVICE_DOMAIN: ${COLLAB_SERVICE_DOMAIN}
     depends_on:
       - kafka
     ports:
       - 8008:8008
+    # volumes:
+    #   - ./backend/matching-websocket-service:/app
 
   collab-app:
     build: 

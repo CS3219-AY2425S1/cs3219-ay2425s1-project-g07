@@ -35,6 +35,7 @@ export class CollabGateway implements OnModuleInit {
     const room = this.collabService.joinRoom(roomId, userId);
     if (!room) {
       ws.send(JSON.stringify({ type: 'error', message: 'Room not found or full' }));
+      ws.close();
       return;
     }
     console.log(`User ${userId} joined room ${roomId}`);
