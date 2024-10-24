@@ -9,7 +9,7 @@ import { getRoom } from '@/services/collabService';
 import useAuth from '@/hooks/useAuth';
 import { Room } from '@/types/Room';
 import { QuestionComplexity } from '@/types/Question';
-import { difficultyText, topicText } from '../page';
+import { difficultyText, topicText } from '../../questions/page';
 
 type PageParams = {
   params: {
