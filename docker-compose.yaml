@@ -78,6 +78,19 @@ services:
     # volumes:
     #   - ./backend/collab-service:/app
 
+  chat-app:
+    build: 
+      context: ./backend/chat-service
+      dockerfile: Dockerfile.dev
+    environment:
+      QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+    depends_on:
+      - question-app
+    ports:
+      - 8009:8009
+    # volumes:
+    #   - ./backend/chat-service:/app
+
   user-app:
     build: 
       context: ./backend/user-service

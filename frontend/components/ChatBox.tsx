@@ -1,9 +1,13 @@
+'use client';
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Text, Stack, Input, Button, Flex } from '@chakra-ui/react';
 import useAuth from '@/hooks/useAuth';
+import { io, Socket } from 'socket.io-client';
 
 interface ChatBoxProps {
 	users: string[];
+	roomId: string; 
 }
 
 interface Message {
@@ -11,21 +15,31 @@ interface Message {
 	text: string;
 }
 
-export const ChatBox = ({ users }: ChatBoxProps) => {
+export const ChatBox = ({ users, roomId }: ChatBoxProps) => {
 	const username = useAuth().username;
-	const [messages, setMessages] = useState<Message[]>([
-		{ senderUsername: 'Eric', text: 'Hello!' },
-		{ senderUsername: 'John', text: 'Hi there!' },
-		{ senderUsername: 'Eric', text: 'How are you?' },
-		{ senderUsername: 'John', text: 'I am good, thanks!' }
-	]);
+	const [messages, setMessages] = useState<Message[]>([]);
 	const [newMessage, setNewMessage] = useState('');
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+	const socketRef = useRef<Socket | null>(null);
+
+	useEffect(() => {
+		const newSocket = io('http://localhost:8009');
+		socketRef.current = newSocket;
+		newSocket.emit("join room", roomId);
+
+		newSocket.on("chat message", (msg) => {
+			setMessages((prev) => [...prev, msg]);
+		});
+
+		return () => {
+			newSocket.disconnect();
+		};
+	}, [roomId]);
 
 	const handleSendMessage = () => {
 		if (newMessage.trim()) {
 			const message: Message = { senderUsername: username, text: newMessage };
-			setMessages((prev) => [...prev, message]);
+			socketRef.current?.emit('chat message', { roomId, message });
 			setNewMessage('');
 		}
 	};
@@ -43,8 +57,8 @@ export const ChatBox = ({ users }: ChatBoxProps) => {
 	}, [messages]);
 
 	return (
-		<Flex direction="column" borderTop="1px" borderColor="gray.200" p={4} h="40%" overflowY="auto">
-			<Stack spacing={2} mb={3} flex="1" overflowY="auto">
+		<Flex direction="column" borderTop="1px" borderColor="gray.200" pt={4} pl={4} pb={4} h="40%" overflowY="auto">
+			<Stack spacing={2} mb={3} flex="1" overflowY="scroll">
 				{messages.map((msg, index) => (
 					<Flex key={index} justify={msg.senderUsername === username ? 'flex-end' : 'flex-start'}>
 						<Text
@@ -59,7 +73,7 @@ export const ChatBox = ({ users }: ChatBoxProps) => {
 				))}
 				<div ref={messagesEndRef} />
 			</Stack>
-			<Stack direction="row" spacing={2} mt="auto">
+			<Stack direction="row" spacing={2} mt="auto" pr={4}>
 				<Input
 					value={newMessage}
 					onChange={(e) => setNewMessage(e.target.value)}

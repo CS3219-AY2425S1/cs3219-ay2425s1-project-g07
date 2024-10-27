@@ -43,7 +43,7 @@ export default function Page({ params }: PageParams) {
         <SimpleGrid columns={2} flex="1" className='m-8' spacing={4}>
           <Stack h="85vh" overflowY="auto" border="1px" borderColor="gray.200" borderRadius="md" spacing={0}>
             <Question question={room.question} />
-            <ChatBox users={room.users} />
+            <ChatBox users={room.users} roomId={roomId}/>
           </Stack>
           <Stack spacing={4} h="85vh" overflowY="auto" border="1px" borderColor="gray.200" borderRadius="md">
             <YjsEditor userId={username} roomId={roomId} />
