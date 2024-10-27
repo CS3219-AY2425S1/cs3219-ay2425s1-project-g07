@@ -29,7 +29,7 @@ rm -rf backend/service_name/.git
 # Backend: Service - Port Bindings
 
 | Service                    | Docker Port | Local Port |
-|----------------------------|-------------|------------|
+| -------------------------- | ----------- | ---------- |
 | Frontend                   | 3000        | 3000       |
 | API Gateway                | 8000        | 8000       |
 | Question Service           | 8001        | 8001       |
@@ -41,3 +41,4 @@ rm -rf backend/service_name/.git
 | Kafka                      | -           | 8005       |
 | Kafka UI                   | 8006        | 8080       |
 | Collab Service             | 8007        | 8007       |
+| History Service            | 8090        | 8090       |

@@ -3,17 +3,17 @@ version: "3.9"
 
 services:
   frontend:
-      container_name: frontend
-      build:
-        context: ./frontend
-        dockerfile: Dockerfile
-      # volumes:
-      #   - ./frontend:/app
-      ports:
-        - "3000:3000"
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    # volumes:
+    #   - ./frontend:/app
+    ports:
+      - "3000:3000"
 
   api-gateway:
-    build: 
+    build:
       context: ./backend/api-gateway
       dockerfile: Dockerfile.dev
     environment:
@@ -25,7 +25,7 @@ services:
     #   - ./backend/api-gateway:/app
 
   question-app:
-    build: 
+    build:
       context: ./backend/question-service
       dockerfile: Dockerfile.dev
     environment:
@@ -37,7 +37,7 @@ services:
     #   - ./backend/question-service:/app
 
   matching-app:
-    build: 
+    build:
       context: ./backend/matching-service
       dockerfile: Dockerfile.dev
     environment:
@@ -63,7 +63,7 @@ services:
       - 8008:8008
 
   collab-app:
-    build: 
+    build:
       context: ./backend/collab-service
       dockerfile: Dockerfile.dev
     environment:
@@ -76,7 +76,7 @@ services:
     #   - ./backend/collab-service:/app
 
   user-app:
-    build: 
+    build:
       context: ./backend/user-service
       dockerfile: Dockerfile.dev
     environment:
@@ -130,6 +130,19 @@ services:
     ports:
       - "8006:8080"
     environment:
-      DYNAMIC_CONFIG_ENABLED: 'true'
+      DYNAMIC_CONFIG_ENABLED: "true"
     volumes:
       - ./backend/kui/config.yaml:/etc/kafkaui/dynamic_config.yaml
+
+  history-service:
+    container_name: history-service
+    build:
+      context: ./backend/history-service
+      dockerfile: Dockerfile.dev
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_NAME: ${MONGODB_NAME}
+      PORT: ${HISTORY_SERVICE_PORT}
+      HISTORY_SERVICE_MONGODB_URI: ${HISTORY_SERVICE_MONGODB_URI}
+    ports:
+      - ${HISTORY_SERVICE_PORT}:${HISTORY_SERVICE_PORT}

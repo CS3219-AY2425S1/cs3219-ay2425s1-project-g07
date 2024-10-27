@@ -8,18 +8,19 @@ import {
 } from './schemas/history.schema';
 
 import { QuestionHistoryController } from './controllers/history.controller';
-
 import { QuestionHistoryService } from './services/history.services';
 
-const pass = 'ikSQsrctXLavjahv';
-const user = 'history-service';
-const dbName = 'history-service';
+const connection_uri = process.env.HISTORY_SERVICE_MONGODB_URI;
 
-const connection_string = `mongodb+srv://${user}:${pass}@cluster0.izvdz.mongodb.net/${dbName}?retryWrites=true&w=majority&appName=Cluster0`;
+if (!connection_uri) {
+  throw new Error(
+    'Please define the HISTORY_SERVICE_MONGODB_URI environment variable inside .env',
+  );
+}
 
 @Module({
   imports: [
-    MongooseModule.forRoot(connection_string),
+    MongooseModule.forRoot(connection_uri),
     MongooseModule.forFeature([
       {
         name: QuestionHistory.name,
