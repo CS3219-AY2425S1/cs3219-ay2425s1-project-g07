@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState, useRef } from 'react';
 import * as Y from 'yjs';
-import * as monaco from 'monaco-editor'
+import * as monaco from 'monaco-editor';
 import { WebsocketProvider } from 'y-websocket';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
@@ -20,30 +20,37 @@ interface AwarenessUser {
   selection: monaco.Selection | null;
 }
 
-const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4']
+const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4'];
 
 self.MonacoEnvironment = {
   getWorkerUrl: function (moduleId, label) {
-    if (label === 'json') {
-      return '_next/static/json.worker.js';
+    switch (label) {
+      case 'json':
+        return '_next/static/json.worker.js';
+      case 'css':
+      case 'scss':
+      case 'less':
+        return '_next/static/css.worker.js';
+      case 'html':
+      case 'handlebars':
+      case 'razor':
+        return '_next/static/html.worker.js';
+      case 'typescript':
+      case 'javascript':
+        return '_next/static/ts.worker.js';
+      default:
+        return '_next/static/editor.worker.js';
     }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return '_next/static/css.worker.js';
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return '_next/static/html.worker.js';
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return '_next/static/ts.worker.js';
-    }
-    return '_next/static/editor.worker.js';
   }
 };
 
-const YjsEditor = (
-  { userId, roomId, onConnectionChange }: 
-  { userId: string, roomId: string, onConnectionChange?: (status: 'connected' | 'disconnected') => void }
-) => {
+interface IProps {
+  userId: string;
+  roomId: string;
+  onConnectionChange?: (status: 'connected' | 'disconnected') => void;
+}
+
+const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [connectedToRoom, setConnectedToRoom] = useState(false);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -51,65 +58,52 @@ const YjsEditor = (
   const [binding, setBinding] = useState<MonacoBinding | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<AwarenessUser[]>([]);
   const cursorsRef = useRef<Map<string, string[]>>(new Map());
-  const [codeOutput, setCodeOutput] = useState<string>(''); 
+  const [codeOutput, setCodeOutput] = useState<string>('');
 
-  // Generate a User for this client
   const currentUser = useMemo(() => ({
     id: userId,
     color: colors[Math.floor(Math.random() * colors.length)]
-  }), []);
+  }), [userId]);
 
-  // this effect manages the lifetime of the Yjs document and the provider
   useEffect(() => {
     const provider = new WebsocketProvider(
       'ws://localhost:8007/code',
       roomId,
       ydoc,
-      {
-      maxBackoffTime: 4000,
-      params: { userId }
-      }
+      { maxBackoffTime: 4000, params: { userId } }
     );
 
-    // setTimeout(() => {
-    //   setProvider(provider);
-    //   provider.awareness.setLocalStateField('user', currentUser);
-    //   provider.awareness.setLocalStateField('cursor', { lineNumber: 1, column: 1 });
-    // }, 1000);
     setProvider(provider);
     provider.awareness.setLocalStateField('user', currentUser);
-    provider.awareness.setLocalStateField('cursor', {lineNumber: 1, column: 1});
+    provider.awareness.setLocalStateField('cursor', { lineNumber: 1, column: 1 });
 
     const handleConnection = () => {
       console.log("Connected to room: ", roomId);
       setConnectedToRoom(true);
       onConnectionChange?.('connected');
-    }
+    };
 
     const handleDisconnect = () => {
       console.log("Disconnected from room: ", roomId);
       setConnectedToRoom(false);
       onConnectionChange?.('disconnected');
-    }
+    };
 
     const handleConnectError = () => {
       console.log("Error connecting to room: ", roomId);
       setConnectedToRoom(false);
       provider.shouldConnect = false;
       onConnectionChange?.('disconnected');
-    }
+    };
 
-    // Add connection event listeners
     provider.on('status', ({ status }: { status: string }) => {
       console.log("Connection status: ", status);
       if (status === 'connected') {
         handleConnection();
-      } else if (status === 'disconnected') {
-        window.location.reload();
       }
     });
 
-    provider.on('connection-error', handleConnectError); 
+    provider.on('connection-error', handleConnectError);
 
     const handleAwarenessChange = () => {
       const states = Array.from(provider.awareness.getStates().values());
@@ -119,24 +113,20 @@ const YjsEditor = (
         ...state
       }));
       setConnectedUsers(users);
-    }
+    };
 
     provider.awareness.on('change', handleAwarenessChange);
     handleAwarenessChange();
 
     return () => {
       provider.awareness.off('change', handleAwarenessChange);
-      provider?.destroy()
-      ydoc.destroy()
+      provider.destroy();
+      ydoc.destroy();
     };
-  }, [ydoc]);
+  }, [ydoc, roomId, userId, currentUser, onConnectionChange]);
 
-  // This effect manages the cursor and selection of users in the editor
   useEffect(() => {
-    if (!editor || !provider) {
-      console.log("Editor or provider not ready yet");
-      return;
-    }
+    if (!editor || !provider) return;
 
     const updateCursor = () => {
       const position = editor.getPosition();
@@ -147,7 +137,7 @@ const YjsEditor = (
         });
       }
       provider.awareness.setLocalStateField('selection', editor.getSelection());
-    }
+    };
 
     updateCursor();
 
@@ -156,10 +146,10 @@ const YjsEditor = (
 
     const createCursorDecoration = (state: AwarenessUser) => ({
       range: new monaco.Range(
-        state.cursor!.lineNumber,
-        state.cursor!.column,
-        state.cursor!.lineNumber,
-        state.cursor!.column
+        state.cursor.lineNumber,
+        state.cursor.column,
+        state.cursor.lineNumber,
+        state.cursor.column
       ),
       options: {
         className: `cursor-${state.user.id}`,
@@ -169,24 +159,23 @@ const YjsEditor = (
       }
     });
 
-    // Add cursor styles
     const addCursorStyle = (userId: string, color: string): void => {
       const style = document.createElement('style');
       style.textContent = `
         .cursor-${userId} {
-        background-color: ${color};
-        width: 2px !important;
-        height: 18px !important;
-        position: absolute;
+          background-color: ${color};
+          width: 2px !important;
+          height: 18px !important;
+          position: absolute;
         }
         .cursor-${userId}::before {
-        content: '';
-        width: 6px;
-        height: 6px;
-        background-color: ${color};
-        position: absolute;
-        top: -6px;
-        left: -2px;
+          content: '';
+          width: 6px;
+          height: 6px;
+          background-color: ${color};
+          position: absolute;
+          top: -6px;
+          left: -2px;
         }
       `;
       document.head.appendChild(style);
@@ -212,7 +201,7 @@ const YjsEditor = (
           cursorsRef.current.delete(userId);
         }
       });
-    }
+    };
 
     provider.awareness.on('change', handleAwarenessChange);
     handleAwarenessChange();
@@ -225,30 +214,23 @@ const YjsEditor = (
         editor.deltaDecorations(decorations, []);
       });
       cursorsRef.current.clear();
-    }
+    };
+  }, [editor, provider, currentUser]);
 
-
-  }, [editor, provider]);
-
-  // this effect manages the lifetime of the editor binding
   useEffect(() => {
-    if (provider == null || editor == null) {
-      return;
-    }
-    const binding = new MonacoBinding(ydoc.getText(), editor.getModel()!, new Set([editor]), provider?.awareness);
+    if (provider == null || editor == null) return;
+
+    const binding = new MonacoBinding(ydoc.getText(), editor.getModel()!, new Set([editor]), provider.awareness);
     setBinding(binding);
 
     return () => {
       binding.destroy();
-    }
+    };
   }, [ydoc, provider, editor]);
 
-  // This effect listens for the Shift + Enter key combination to run the code
   useEffect(() => {
     if (editor) {
-      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-        runCode();
-      });
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, runCode);
     }
   }, [editor]);
 
@@ -271,27 +253,33 @@ const YjsEditor = (
   };
 
   return (
-     connectedToRoom ? (
+    connectedToRoom ? (
       <Flex direction="column" className='h-full'>
         <Editor
           height="100%"
           defaultValue="// some comment"
           theme='vs-dark'
           defaultLanguage="javascript"
-          onMount={editor => { setEditor(editor) }}
+          onMount={setEditor}
           options={{
             minimap: { enabled: false },
             automaticLayout: true
           }}
         />
-        <Textarea flex="0 0 20%" backgroundColor="#f5f5f5" placeholder='Your code output will be shown here.' value={codeOutput} readOnly />
+        <Textarea
+          flex="0 0 20%"
+          backgroundColor="#f5f5f5"
+          placeholder='Your code output will be shown here.'
+          value={codeOutput}
+          readOnly
+        />
         <Flex justify="space-between" align="center" width="100%" padding="20px">
           <div className="flex flex-wrap gap-2">
-            {connectedUsers.length != 0 ? connectedUsers.map(({ user }) => (
+            {connectedUsers.length ? connectedUsers.map(({ user }) => (
               <div
                 key={user.id}
                 className="flex items-center gap-2 px-3 py-1 rounded-full"
-                style={{ backgroundColor: user.color + '20', border: `2px solid ${user.color}` }}
+                style={{ backgroundColor: `${user.color}20`, border: `2px solid ${user.color}` }}
               >
                 <div
                   className="w-2 h-2 rounded-full"
@@ -308,12 +296,11 @@ const YjsEditor = (
       </Flex>
     ) : (
       <div className="flex flex-col justify-center items-center h-full">
-        <Spinner size='xl' m={5}/>
+        <Spinner size='xl' m={5} />
         <Text>Connecting to room...</Text>
       </div>
     )
-
   );
-}
+};
 
 export default YjsEditor;
