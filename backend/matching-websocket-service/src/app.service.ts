@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Consumer, Kafka, Producer } from 'kafkajs';
+import { createClient, RedisClientType } from 'redis';
 import {
   MatchFoundResponse,
   MatchRequest,
@@ -26,12 +27,13 @@ type MatchTimeoutMessage = {
 
 @Injectable()
 export class MatchingWebSocketService implements OnModuleInit {
-  private readonly REQUEST_TIMEOUT = 30000; // epoch time 30s
+  private readonly REQUEST_TIMEOUT_MS = 30000; // epoch time 30s
   private readonly kafkaBrokerUri: string;
   private readonly consumerGroupId: string;
   private readonly kafka: Kafka;
   private readonly producer: Producer;
   private readonly consumer: Consumer;
+  private readonly redisClient: RedisClientType;
 
   private readonly socketIdReqMap: {
     [socketId: string]: {
@@ -60,6 +62,13 @@ export class MatchingWebSocketService implements OnModuleInit {
     // allowAutoTopicCreation: true // it is true by default
     this.producer = this.kafka.producer();
     this.consumer = this.kafka.consumer({ groupId: this.consumerGroupId });
+
+    this.redisClient = createClient({
+      url: 'redis://redis:6379'
+    });
+    this.redisClient.on('error', (err) => {
+      console.log(`Redis error: ${err}`);
+    }).connect().then(() => console.log('Connected to Redis'));
   }
 
   async onModuleInit() {
@@ -97,6 +106,7 @@ export class MatchingWebSocketService implements OnModuleInit {
       const entry = this.userSocketMap[messageBody.userId];
       delete this.userSocketMap[messageBody.userId];
       delete this.socketIdReqMap[entry.socketId];
+      this.removeUserFromMatch(messageBody.userId);
       entry.onMatchTimeout();
     }
   }
@@ -107,6 +117,7 @@ export class MatchingWebSocketService implements OnModuleInit {
       const res = this.userSocketMap[messageBody.userId1];
       delete this.userSocketMap[messageBody.userId1];
       delete this.socketIdReqMap[res.socketId];
+      this.removeUserFromMatch(messageBody.userId1);
       res.onMatch({
         matchedWithUserId: messageBody.userId2,
         matchedTopic: messageBody.matchedTopic,
@@ -117,6 +128,7 @@ export class MatchingWebSocketService implements OnModuleInit {
       const res = this.userSocketMap[messageBody.userId2];
       delete this.userSocketMap[messageBody.userId2];
       delete this.socketIdReqMap[res.socketId];
+      this.removeUserFromMatch(messageBody.userId2);
       res.onMatch({
         matchedWithUserId: messageBody.userId1,
         matchedTopic: messageBody.matchedTopic,
@@ -128,12 +140,18 @@ export class MatchingWebSocketService implements OnModuleInit {
   async addMatchRequest(socketId: string, req: MatchRequest,
                         onMatch: (matchFound: MatchFoundResponse) => void,
                         onMatchTimeout: () => void): Promise<MatchRequestResponse> {
-    // TODO Perform atomic set on Redis to see if user is already in the pool
+    // Perform atomic set on Redis to see if user is already in the pool
     // If an existing entry exists for the user, return an error
+    if (await this.userAlreadyInMatch(req.userId)) {
+      return {
+        message: 'Failed to match',
+        error: 'You are already in the match queue'
+      }
+    }
 
     const kafkaTopic = `${req.difficulty}-${req.topic}`;
     const currentTime = Date.now();
-    const expiryTime = currentTime + this.REQUEST_TIMEOUT;
+    const expiryTime = currentTime + this.REQUEST_TIMEOUT_MS;
     await this.producer.send({
       topic: kafkaTopic,
       messages: [{value: JSON.stringify({
@@ -180,6 +198,7 @@ export class MatchingWebSocketService implements OnModuleInit {
           timestamp: req.timestamp
         })}]
     });
+    this.removeUserFromMatch(req.userId);
 
     return {
       message: `Match Request cancelled for ${req.userId} at ${req.timestamp}`,
@@ -192,5 +211,18 @@ export class MatchingWebSocketService implements OnModuleInit {
 
   private getConsumerGroupId(): string {
     return this.configService.get<string>('config.consumerGroupId');
+  }
+
+  private async userAlreadyInMatch(userId: string): Promise<boolean> {
+    const result = await this.redisClient.set(userId, "", {
+      NX: true, // Set only if key does not exist
+      EX: this.REQUEST_TIMEOUT_MS / 1000 + 0.5,
+    });
+
+    return result === null || result === undefined;
+  }
+
+  private removeUserFromMatch(userId: string) {
+    this.redisClient.del(userId);
   }
 }
