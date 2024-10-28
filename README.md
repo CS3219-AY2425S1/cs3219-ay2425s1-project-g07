@@ -34,10 +34,11 @@ rm -rf backend/service_name/.git
 | API Gateway                | 8000        | 8000       |
 | Question Service           | 8001        | 8001       |
 | Matching Service           | 8002        | 8002       |
-| Matching WebSocket Service | 8008        | 8008       |
 | User Service               | 8003        | 8003       |
 | User Service MongoDB       | 27017       | 27017      |
 | Zookeeper                  | -           | 8004       |
 | Kafka                      | -           | 8005       |
 | Kafka UI                   | 8006        | 8080       |
 | Collab Service             | 8007        | 8007       |
+| Matching WebSocket Service | 8008        | 8008       |
+| Redis                      | -           | 6379       |
