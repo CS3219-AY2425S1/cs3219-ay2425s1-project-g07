@@ -25,6 +25,13 @@ export class QuestionHistoryController {
     private readonly questionHistoryService: QuestionHistoryService,
   ) {}
 
+  @Get('student/:studentId')
+  async findAllByStudentId(
+    @Param('studentId') studentId: string,
+  ): Promise<QuestionHistory[]> {
+    return this.questionHistoryService.findAllByStudentId(studentId);
+  }
+
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async create(

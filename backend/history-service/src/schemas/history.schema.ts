@@ -23,9 +23,6 @@ export class QuestionHistory {
 
   @Prop()
   timeCreated: Date;
-
-  @Prop()
-  timeCompleted: Date | null;
 }
 
 export type QuestionHistoryDocument = QuestionHistory & Document;

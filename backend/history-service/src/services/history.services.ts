@@ -30,6 +30,10 @@ export class QuestionHistoryService {
     return this.questionHistoryModel.find().exec();
   }
 
+  async findAllByStudentId(studentId: string): Promise<QuestionHistory[]> {
+    return this.questionHistoryModel.find({ studentId }).exec();
+  }
+
   async findOne(id: string): Promise<QuestionHistory> {
     const questionHistory = await this.questionHistoryModel.findById(id).exec();
     if (!questionHistory) {
