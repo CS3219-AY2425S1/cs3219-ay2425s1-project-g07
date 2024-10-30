@@ -26,23 +26,11 @@ export const getQuestionHistory = async (
   }
 };
 
-export const getEasyQuestions = async (
-  studentId: string
-): Promise<QuestionHistory[]> => {
+export const addHistory = async (history: QuestionHistory) => {
   try {
-    const response = await axiosInstance.get(
-      `history/questions/student/${studentId}`
-    );
-
-    const questionHistory = response.data.map((item: any) => ({
-      ...item,
-      timeAttempted: new Date(item.timeAttempted),
-      timeCreated: new Date(item.timeCreated),
-    }));
-
-    return questionHistory as QuestionHistory[];
+    await axiosInstance.post("history/questions", history);
   } catch (error) {
-    console.error("Error getting history:", error);
+    console.error("Error adding history:", error);
     throw error;
   }
 };
