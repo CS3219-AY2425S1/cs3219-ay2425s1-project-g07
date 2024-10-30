@@ -224,7 +224,7 @@ export class MatchingWebSocketService implements OnModuleInit {
   private async userAlreadyInMatch(userId: string): Promise<boolean> {
     const result = await this.redisClient.set(userId, "", {
       NX: true, // Set only if key does not exist
-      EX: this.REQUEST_TIMEOUT_MS / 1000 + 0.5,
+      EX: Math.ceil(this.REQUEST_TIMEOUT_MS / 1000 + 1),
     });
 
     return result === null || result === undefined;
