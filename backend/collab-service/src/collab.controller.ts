@@ -7,8 +7,8 @@ export class CollabController {
     constructor(private readonly collabService: CollabService) {}
 
     @Post('create-room')
-    async createRoom(@Body() body: { roomId: string }) {
-        return this.collabService.createRoom(body.roomId);
+    async createRoom(@Body() body: { roomId: string, topic: string, difficulty: string }) {
+        return this.collabService.createRoom(body.roomId, body.topic, body.difficulty);
     }
 
     @Get('rooms')
@@ -19,11 +19,6 @@ export class CollabController {
     @Get('rooms/:id')
     async getRoomById(@Param('id') id: string) {
         return this.collabService.getRoom(id);
-    }
-
-    @Get('question')
-    async getRandomQuestion(@Param('topic') topic: string, @Param('difficulty') difficulty: string) {    
-        return this.collabService.getQuestion(topic, difficulty);
     }
 
 }
