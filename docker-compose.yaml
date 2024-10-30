@@ -136,3 +136,8 @@ services:
       DYNAMIC_CONFIG_ENABLED: 'true'
     volumes:
       - ./backend/kui/config.yaml:/etc/kafkaui/dynamic_config.yaml
+
+  redis:
+    container_name: matching-redis
+    image: redis:latest
+    # No need to expose the port as it is only used internally (6379)
