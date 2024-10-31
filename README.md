@@ -40,5 +40,6 @@ rm -rf backend/service_name/.git
 | Kafka                      | -           | 8005       |
 | Kafka UI                   | 8006        | 8080       |
 | Collab Service             | 8007        | 8007       |
+| Chat Service               | 8009        | 8009       |
 | Matching WebSocket Service | 8008        | 8008       |
 | Redis                      | -           | 6379       |
