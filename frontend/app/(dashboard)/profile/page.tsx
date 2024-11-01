@@ -125,9 +125,9 @@ export default function ProfilePage() {
   };
 
   const QuestionsStatsCard = () => {
-    const [questionsAttempted, setQuestionsAttempted] = useState(20);
-    const [totalQuestions, setTotalQuestions] = useState(92);
-    const [easyQuestionAttempt, setEasyQuestionAttempt] = useState(0);
+    const [questionsAttempted, setQuestionsAttempted] = useState(0);
+    const [totalQuestions, setTotalQuestions] = useState(0);
+    const [easyQuestionAttempt, setEasyQuestionAttempt] = useState(100);
     const [mediumQuestionAttempt, setMediumQuestionAttempt] = useState(0);
     const [hardQuestionAttempt, setHardQuestionAttempt] = useState(0);
 
@@ -145,6 +145,8 @@ export default function ProfilePage() {
     }, []);
 
     useEffect(() => {
+      if (!userId) return;
+
       getQuestionHistory(userId).then((data) => {
         setQuestionHistory(data);
         setQuestionsAttempted(data.length);
@@ -158,7 +160,7 @@ export default function ProfilePage() {
           data.filter((item) => item.questionDifficulty === "hard").length
         );
       });
-    }, []);
+    }, [userId]);
 
     return (
       <Card
@@ -229,6 +231,8 @@ export default function ProfilePage() {
     const { userId, username, email, setUsername, setEmail } = useAuth();
 
     useEffect(() => {
+      if (!userId) return;
+
       getQuestionHistory(userId).then((data) => {
         setHistory(data);
       });
