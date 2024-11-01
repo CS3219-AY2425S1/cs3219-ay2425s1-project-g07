@@ -7,7 +7,7 @@ import {
 } from '../types/Match';
 
 // Go directly to matching websockets
-const baseDomain = process.env.NEXT_PUBLIC_MATCHING_WEBSOCKET_SERVICE_DOMAIN || process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || "http://localhost:8008";
+const baseDomain = process.env.NEXT_PUBLIC_MATCHING_WEBSOCKET_SERVICE_DOMAIN || "http://localhost:8008";
 
 const axiosInstance = axios.create({
   baseURL: baseDomain,

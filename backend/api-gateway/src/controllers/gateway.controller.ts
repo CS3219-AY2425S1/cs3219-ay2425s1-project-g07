@@ -7,7 +7,6 @@ import { GatewayService } from '../services/gateway.service';
 export class GatewayController {
   private readonly questionServiceDomain: string;
   private readonly userServiceDomain: string;
-  private readonly matchingWebsocketServiceDomain: string;
   private readonly collabServiceDomain: string;
   private readonly historyServiceDomain: string;
 
@@ -17,7 +16,6 @@ export class GatewayController {
   ){
     this.questionServiceDomain = this.configService.get<string>('QUESTION_SERVICE_DOMAIN');
     this.userServiceDomain = this.configService.get<string>('USER_SERVICE_DOMAIN');
-    this.matchingWebsocketServiceDomain = this.configService.get<string>('MATCHING_WEBSOCKET_SERVICE_DOMAIN');
     this.collabServiceDomain = this.configService.get<string>('COLLAB_SERVICE_DOMAIN');
     this.historyServiceDomain = this.configService.get<string>('HISTORY_SERVICE_DOMAIN');
   }
@@ -57,18 +55,6 @@ export class GatewayController {
   @All('history*')
   async handleHistoryRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
     this.gatewayService.handleRedirectRequest(req, res, this.historyServiceDomain)
-  }
-
-  // For Collab websocket (not working)
-  @All('collab*')
-  redirectToBackend(@Res() res: Response) {
-    // redirect works on browser (to be tested)
-    res.redirect(this.collabServiceDomain);
-  }
-  // Matching websocket service (not working)
-  @All('match*')
-  redirectToMatchSocketBackend(@Res() res: Response) {
-    res.redirect(this.matchingWebsocketServiceDomain);
   }
 
 }
