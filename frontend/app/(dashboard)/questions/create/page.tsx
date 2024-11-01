@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Question, QuestionComplexity, QuestionTopic } from "@/types/Question";
 import { createQuestion } from "@/services/questionService";
 import { marked } from 'marked';
-import { topicText } from "../page";
+import { topicText } from '@/app/utils';
 import { useRouter } from 'next/navigation';
 
 export default function CreateQuestionPage() {

@@ -6,7 +6,7 @@ services:
     container_name: frontend
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     # volumes:
     #   - ./frontend:/app
     ports:
@@ -15,7 +15,7 @@ services:
   api-gateway:
     build:
       context: ./backend/api-gateway
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
       USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
@@ -27,7 +27,7 @@ services:
   question-app:
     build:
       context: ./backend/question-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_NAME: ${MONGODB_NAME}
@@ -45,7 +45,7 @@ services:
   matching-app:
     build:
       context: ./backend/matching-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
       MATCHING_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_SERVICE_CONSUMER_GROUP_ID}
@@ -60,7 +60,7 @@ services:
   matching-websocket:
     build:
       context: ./backend/matching-websocket-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
       MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID}
@@ -76,7 +76,7 @@ services:
   collab-app:
     build:
       context: ./backend/collab-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
     depends_on:
@@ -90,7 +90,7 @@ services:
   chat-app:
     build:
       context: ./backend/chat-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
     ports:
@@ -101,7 +101,7 @@ services:
   user-app:
     build:
       context: ./backend/user-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       JWT_SECRET: ${JWT_SECRET}
       DB_CLOUD_URI: ${DB_CLOUD_URI}
@@ -172,7 +172,7 @@ services:
     container_name: history-service
     build:
       context: ./backend/history-service
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     environment:
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_NAME: ${MONGODB_NAME}

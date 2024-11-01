@@ -12,8 +12,8 @@ import {
 } from '@chakra-ui/react'
 
 import { marked } from 'marked';
-import { Question } from '../../../types/Question';
-import { difficultyText, topicText } from './page';
+import { Question } from '@/types/Question';
+import { difficultyText, topicText } from '../../utils';
 
 export default function QuestionModal(question: Question) {
     const { isOpen, onOpen, onClose } = useDisclosure()

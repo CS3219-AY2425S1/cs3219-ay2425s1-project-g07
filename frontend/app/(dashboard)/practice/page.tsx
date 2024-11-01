@@ -233,7 +233,7 @@ export default function MatchingPage() {
         questionTitle: room.question.title,
       })
         .then(() => {
-          router.push(`/room/${roomId}`);
+          router.push(`/rooms/${roomId}`);
         })
         .catch((error) => {
           console.error("Error adding history:", error);
@@ -247,7 +247,7 @@ export default function MatchingPage() {
               isClosable: true,
               position: "top",
             });
-            router.push(`/room/${roomId}`);
+            router.push(`/rooms/${roomId}`);
           } else {
             toast({
               title: "Error",

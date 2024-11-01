@@ -44,3 +44,8 @@
 //     </Stack>
 //   )
 // }
+
+// Keeping this so the build doesn't break
+export default function ResetPasswordPage() {
+  return <div></div>
+}
