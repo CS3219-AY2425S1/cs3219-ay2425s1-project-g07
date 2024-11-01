@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   QuestionHistory,
@@ -20,10 +24,25 @@ export class QuestionHistoryService {
   async create(
     createQuestionHistoryDto: CreateQuestionHistoryDto,
   ): Promise<QuestionHistory> {
+    const { roomId, studentId } = createQuestionHistoryDto;
+
+    // Check for existing record with the same roomId and studentId
+    const existingRecord = await this.questionHistoryModel
+      .findOne({ roomId, studentId })
+      .exec();
+    if (existingRecord) {
+      throw new ConflictException('Duplicate roomId and studentId combination');
+    }
+
     const createdQuestionHistory = new this.questionHistoryModel(
       createQuestionHistoryDto,
     );
-    return createdQuestionHistory.save();
+    try {
+      return await createdQuestionHistory.save();
+    } catch (error) {
+      console.error('Error creating question history:', error);
+      throw error;
+    }
   }
 
   async findAll(): Promise<QuestionHistory[]> {

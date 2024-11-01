@@ -22,6 +22,16 @@ export class CreateQuestionHistoryDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
+  readonly roomId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  questionTitle: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   readonly questionDifficulty: string;
 
   @ApiProperty({ type: [String] })

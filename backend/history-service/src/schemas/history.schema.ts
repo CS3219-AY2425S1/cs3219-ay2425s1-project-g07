@@ -10,6 +10,12 @@ export class QuestionHistory {
   questionId: string;
 
   @Prop()
+  roomId: string;
+
+  @Prop()
+  questionTitle: string;
+
+  @Prop()
   questionDifficulty: string;
 
   @Prop()
