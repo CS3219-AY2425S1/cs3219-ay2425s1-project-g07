@@ -6,7 +6,7 @@ services:
     container_name: frontend
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: frontend/Dockerfile.dev
     # volumes:
     #   - ./frontend:/app
     ports:
@@ -20,7 +20,7 @@ services:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
       USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
     ports:
-      - 8000:8000
+      - "8000:8000"
     # volumes:
     #   - ./backend/api-gateway:/app
 
@@ -32,7 +32,7 @@ services:
       MONGODB_URI: ${MONGODB_URI}
       MONGODB_NAME: ${MONGODB_NAME}
     ports:
-      - 8001:8001
+      - "8001:8001"
     # volumes:
     #   - ./backend/question-service:/app
 
@@ -46,7 +46,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - 8002:8002
+      - "8002:8002"
     # volumes:
     #   - ./backend/matching-service:/app
 
@@ -61,7 +61,7 @@ services:
     depends_on:
       - kafka
     ports:
-      - 8008:8008
+      - "8008:8008"
     # volumes:
     #   - ./backend/matching-websocket-service:/app
 
@@ -74,7 +74,7 @@ services:
     depends_on:
       - question-app
     ports:
-      - 8007:8007
+      - "8007:8007"
     # volumes:
     #   - ./backend/collab-service:/app
 
@@ -87,7 +87,7 @@ services:
     depends_on:
       - question-app
     ports:
-      - 8009:8009
+      - "8009:8009"
     # volumes:
     #   - ./backend/chat-service:/app
 
@@ -102,7 +102,7 @@ services:
       PORT: ${PORT}
       ENV: ${ENV}
     ports:
-      - 8003:8003
+      - "8003:8003"
     # volumes:
     #   - ./backend/user-service:/app
     depends_on:
@@ -135,7 +135,7 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:8004
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:8005,PLAINTEXT_HOST://localhost:28005
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_BROKER_URI},PLAINTEXT_HOST://localhost:28005
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
