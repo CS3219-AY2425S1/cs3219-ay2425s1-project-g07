@@ -11,9 +11,6 @@ services:
       NEXT_PUBLIC_MATCHING_WEBSOCKET_SERVICE_DOMAIN: ${FE_MATCHING_WEBSOCKET_SERVICE_DOMAIN}
       NEXT_PUBLIC_COLLAB_SERVICE_DOMAIN: ${FE_COLLAB_SERVICE_DOMAIN}
       NEXT_PUBLIC_CHAT_SERVICE_DOMAIN: ${FE_CHAT_SERVICE_DOMAIN}
-      # NEXT_PUBLIC_QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
-      # NEXT_PUBLIC_USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
-      # NEXT_PUBLIC_HISTORY_SERVICE_DOMAIN: ${HISTORY_SERVICE_DOMAIN}
       NEXT_PUBLIC_API_GATEWAY_DOMAIN: ${API_GATEWAY_DOMAIN}
     # volumes:
     #   - ./frontend:/app
@@ -163,16 +160,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
-
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8006:8080"
-    environment:
-      DYNAMIC_CONFIG_ENABLED: "true"
-    volumes:
-      - ./backend/kui/config.yaml:/etc/kafkaui/dynamic_config.yaml
 
   redis:
     container_name: matching-redis
