@@ -291,7 +291,7 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
               <span>No connected users</span>
             )}
           </div>
-          <Button alignSelf="flex-end" margin="10px" onClick={runCode}>Run</Button>
+          <Button alignSelf="flex-end" onClick={runCode}>Run</Button>
         </Flex>
       </Flex>
     ) : (
