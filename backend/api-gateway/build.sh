@@ -11,6 +11,6 @@ fi
 
 image="asia-southeast1-docker.pkg.dev/cs3219-peerprep-436507/peerprep/api-gateway:${version}"
 
-docker build -f Dockerfile.dev -t $image .
+docker build -t $image .
 
 docker push $image
