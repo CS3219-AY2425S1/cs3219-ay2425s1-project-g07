@@ -1,7 +1,25 @@
-// Copied from question-service
+export type MatchRequest = {
+    userId: string;
+    topic: QuestionTopic;
+    difficulty: QuestionComplexity;
+    timestamp: number;
+};
+
+export type MatchRequestResponse = {
+    message: string;
+    error?: string;
+    expiry?: number;
+};
+
+export type MatchFoundResponse = {
+    matchedWithUserId: string;
+    matchedTopic: string;
+    matchedRoom: string;
+}
+
 export enum QuestionTopic {
     ANY = 'any',
-    ARRAY = 'array',
+    ARRAY = "array",
     BINARY = "binary",
     BINARY_SEARCH = "binary_search",
     BINARY_SEARCH_TREE = "binary_search_tree",
@@ -19,12 +37,12 @@ export enum QuestionTopic {
     SORTING = "sorting",
     STACK = "stack",
     STRING = "string",
-    TRIE = "trie"
+    TRIE = "trie",
 }
 
 export enum QuestionComplexity {
     ANY = 'any',
-    EASY = 'easy',
-    MEDIUM = 'medium',
-    HARD = 'hard',
+    EASY = "easy",
+    MEDIUM = "medium",
+    HARD = "hard",
 }

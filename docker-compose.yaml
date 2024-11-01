@@ -57,6 +57,21 @@ services:
     # volumes:
     #   - ./backend/matching-service:/app
 
+  matching-websocket:
+    build:
+      context: ./backend/matching-websocket-service
+      dockerfile: Dockerfile.dev
+    environment:
+      KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
+      MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID}
+      COLLAB_SERVICE_DOMAIN: ${COLLAB_SERVICE_DOMAIN}
+    depends_on:
+      - kafka
+    ports:
+      - 8008:8008
+    # volumes:
+    #   - ./backend/matching-websocket-service:/app
+
   collab-app:
     build: 
       context: ./backend/collab-service
@@ -69,6 +84,19 @@ services:
       - 8007:8007
     # volumes:
     #   - ./backend/collab-service:/app
+
+  chat-app:
+    build: 
+      context: ./backend/chat-service
+      dockerfile: Dockerfile.dev
+    environment:
+      QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+    depends_on:
+      - question-app
+    ports:
+      - 8009:8009
+    # volumes:
+    #   - ./backend/chat-service:/app
 
   user-app:
     build: 
@@ -128,3 +156,8 @@ services:
       DYNAMIC_CONFIG_ENABLED: 'true'
     volumes:
       - ./backend/kui/config.yaml:/etc/kafkaui/dynamic_config.yaml
+
+  redis:
+    container_name: matching-redis
+    image: redis:latest
+    # No need to expose the port as it is only used internally (6379)

@@ -14,6 +14,7 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
+    "@monaco-editor/react": "^4.6.0",
     "axios": "^1.7.7",
     "framer-motion": "^11.5.4",
     "marked": "^14.1.2",
@@ -21,7 +22,11 @@
     "next": "14.2.10",
     "react": "^18",
     "react-dom": "^18",
-    "react-markdown": "^9.0.1"
+    "react-markdown": "^9.0.1",
+    "y-monaco": "^0.1.6",
+    "y-websocket": "^2.0.4",
+    "yjs": "^13.6.20",
+    "socket.io-client": "^4.8.0"
   },
   "devDependencies": {
     "@types/node": "^20",

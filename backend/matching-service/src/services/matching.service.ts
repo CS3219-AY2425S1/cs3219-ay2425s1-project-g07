@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Consumer, Kafka, Producer } from 'kafkajs';
 import { randomUUID } from 'crypto';
 import { Queue } from 'src/utils/queue';
-import { QuestionComplexity, QuestionTopic, MatchResponse, MatchRequestDto } from 'src/dto/request.dto';
+import { QuestionComplexity, QuestionTopic } from 'src/dto/request.dto';
 
 export enum MatchStatus {
   PENDING = 'PENDING',
@@ -36,7 +36,6 @@ type Message = {
 
 @Injectable()
 export class MatchingService implements OnModuleInit {
-  private readonly REQUEST_TIMEOUT = 30000; // epoch time 30s
   private readonly CLEAN_TIMEOUT = 3000;
   private readonly kafkaBrokerUri: string;
   private readonly consumerGroupId: string;
@@ -46,7 +45,6 @@ export class MatchingService implements OnModuleInit {
 
   private requestQueue: Queue<UserEntry>;
   private intervalId: NodeJS.Timeout;
-  private userPool: { [userId: string]: UserEntry } = {}; // In-memory store for user pool
 
   constructor(private configService: ConfigService) {
     this.kafkaBrokerUri = this.getKafkaBrokerUri();
@@ -67,18 +65,24 @@ export class MatchingService implements OnModuleInit {
     await this.consumer.connect();
     await this.subscribeToTopics();
     // Consume message loop
-    await this.consumeMessages();
+    this.consumeMessages();
 
     this.intervalId = setInterval(async () => {
       const currentTime = Date.now();
       // only keep expiry more than currentTime
-      var cleanedEntry = await this.requestQueue.clean((userEntry) => userEntry.expiryTime <= currentTime);
-      for (let entry of cleanedEntry) {
-        if (this.userPool[entry.userId] === entry) {
-          this.removeFromUserPool(entry.userId);
-        }
-        // else might be updated already
-      }
+      const toRemove = await this.requestQueue.clean((userEntry) => userEntry.expiryTime <= currentTime);
+      // Send cancel messages to Kafka
+      this.producer.send({
+        topic: "match-timeouts",
+        messages: toRemove.map((entry) => {
+          return {
+            value: JSON.stringify({
+              userId: entry.userId,
+              timestamp: currentTime,
+            })
+          }
+        }),
+      });
     }, this.CLEAN_TIMEOUT);
   }
 
@@ -135,40 +139,6 @@ export class MatchingService implements OnModuleInit {
     await this.consumer.subscribe({ topics: allTopics, fromBeginning: false });
   }
 
-  async addMatchRequest(req: MatchRequestDto): Promise<MatchResponse> {
-    var kafkaTopic = `${req.difficulty}-${req.topic}`;
-    // console.log("Topic is: ", kafkaTopic);
-    // Add message
-    const currentTime = Date.now();
-    const expiryTime = currentTime + this.REQUEST_TIMEOUT;
-    await this.producer.send({
-      topic: kafkaTopic,
-      messages: [{value: JSON.stringify({
-        action: MessageAction.REQUEST_MATCH,
-        userId: req.userId,
-        timestamp: currentTime,
-        expiryTime: expiryTime
-      })}]
-    });
-    return {
-      message: `Match Request received for ${req.userId} at ${currentTime}`,
-    }
-  }
-
-  async addCancelRequest(req: MatchRequestDto) {
-    var kafkaTopic = `${req.difficulty}-${req.topic}`;
-    console.log("Topic is: ", kafkaTopic);
-    // Add message
-    await this.producer.send({
-      topic: kafkaTopic,
-      messages: [{value: JSON.stringify({
-        action: MessageAction.CANCEL_MATCH,
-        userId: req.userId,
-        timestamp: req.timestamp
-      })}]
-    });
-  }
-
   private matchTopics(kafkaTopic1: string, kafkaTopic2: string): boolean {
     if (kafkaTopic1 === kafkaTopic2) {
       return true;
@@ -221,14 +191,7 @@ export class MatchingService implements OnModuleInit {
       const requesterUserId = matchRequest.userId;
       const currTime = Date.now();
 
-      // Check if this is a duplicate request
-      if (this.userPool[requesterUserId] 
-        && this.userPool[requesterUserId].status !== MatchStatus.CANCELLED // not cancelled (deprecated, keep first)
-        && this.userPool[requesterUserId].expiryTime > currTime // not expired
-      ) {
-        console.log(`Duplicate match request received for ${requesterUserId}`);
-        return;
-      }
+      // TODO Duplicate check handled by Redis
 
       console.log(`Received match request: ${matchRequest} on topic: ${kafkaTopic}`);
 
@@ -241,29 +204,26 @@ export class MatchingService implements OnModuleInit {
           && userInQueue.expiryTime >= currTime // give some leeway
       })
 
-      var existingMatch: string | undefined = matchingUser ? matchingUser.userId : undefined;
+      const existingMatch: string | undefined = matchingUser ? matchingUser.userId : undefined;
 
       if (existingMatch) {
         // Pair the users if match is found
-        const matchedTopic = this.getMatchedTopic(this.userPool[existingMatch].topic, kafkaTopic);
+        const existingMatchTopic = matchingUser.topic
+        const matchedTopic = this.getMatchedTopic(existingMatchTopic, kafkaTopic);
         const roomId = randomUUID();
-        this.userPool[existingMatch].matchedWithUserId = requesterUserId;
-        this.userPool[existingMatch].status = MatchStatus.MATCHED;
-        this.userPool[existingMatch].matchedRoom = roomId;
-        this.userPool[existingMatch].matchedTopic = matchedTopic;
 
-        this.userPool[requesterUserId] = {
-          userId: requesterUserId,
-          status: MatchStatus.MATCHED,
-          topic: kafkaTopic,
-          matchedWithUserId: existingMatch,
-          matchedTopic: matchedTopic,
-          matchedRoom: roomId,
-          createTime: matchRequest.timestamp,
-          expiryTime: matchRequest.expiryTime,
-        };
-        console.log(`Match found for ${requesterUserId} and ${existingMatch} in topic: ${kafkaTopic}`);
+        // Send match event to Kafka
+        this.producer.send({
+          topic: "matches",
+          messages: [{ value: JSON.stringify({
+            userId1: requesterUserId,
+            userId2: existingMatch,
+            matchedTopic: matchedTopic,
+            matchedRoom: roomId,
+          })}]
+        });
       } else {
+        // Add user to the queue
         const userEntry: UserEntry = {
           userId: requesterUserId,
           status: MatchStatus.PENDING,
@@ -274,34 +234,20 @@ export class MatchingService implements OnModuleInit {
           createTime: matchRequest.timestamp,
           expiryTime: matchRequest.expiryTime,
         }
-        await this.requestQueue.enqueue(userEntry)
-        this.userPool[requesterUserId] = userEntry
+        await this.requestQueue.enqueue(userEntry);
       }
 
-      console.log(JSON.stringify(this.userPool, null, 2));
+      await this.requestQueue.print();
   }
 
   private async handleCancelRequest(topic: string, cancelRequest: Message) {
     const requesterUserId = cancelRequest.userId;
 
-    if (!this.userPool[requesterUserId]) {
-      console.log(`Cannot cancel. No match request found for ${requesterUserId}`);
-      return;
-    }
-
     console.log(`Received cancel request: ${cancelRequest} on topic: ${topic}`);
 
-    if (this.userPool[requesterUserId].status === MatchStatus.MATCHED) {
-      console.log(`Cannot cancel. Match already found for ${requesterUserId}`);
-      return;
-    } else {
-      // removes all instances (though only 1 should exist)
-      this.requestQueue.clean((userEntry: UserEntry) =>  userEntry.userId === requesterUserId);
-      this.removeFromUserPool(requesterUserId);
-      console.log(`Match request cancelled for ${requesterUserId} in topic: ${topic}`);
-    }
-
-    console.log(JSON.stringify(this.userPool, null, 2));
+    // removes all instances (though only 1 should exist)
+    await this.requestQueue.clean((userEntry: UserEntry) =>  userEntry.userId === requesterUserId);
+    console.log(`Match request cancelled for ${requesterUserId} in topic: ${topic}`);
   }
 
   private async consumeMessages() {
@@ -311,21 +257,11 @@ export class MatchingService implements OnModuleInit {
         const messageBody: Message = JSON.parse(messageString);
 
         if (messageBody.action === MessageAction.REQUEST_MATCH) {
-          this.handleMatchRequest(topic, messageBody);
+          await this.handleMatchRequest(topic, messageBody);
         } else if (messageBody.action === MessageAction.CANCEL_MATCH) {
-          this.handleCancelRequest(topic, messageBody);
+          await this.handleCancelRequest(topic, messageBody);
         }
       },
     })
   }
-
-  removeFromUserPool(userId: string) {
-    delete this.userPool[userId];
-    console.log(JSON.stringify(this.userPool, null, 2));
-  }
-
-  pollForMatch(userId: string): UserEntry | null {
-    return this.userPool[userId] || null;
-  }
-
 }

@@ -28,14 +28,18 @@ rm -rf backend/service_name/.git
 
 # Backend: Service - Port Bindings
 
-| Service              | Docker Port | Local Port |
-| -------------------- | ----------- | ---------- |
-| Frontend             | 3000        | 3000       |
-| API Gateway          | 8000        | 8000       |
-| Question Service     | 8001        | 8001       |
-| Matching Service     | 8002        | 8002       |
-| User Service         | 8003        | 8003       |
-| User Service MongoDB | 27017       | 27017      |
-| Zookeeper (Kafka)    | 8004/8005   | -          |
-| Kafka UI             | 8006        | 8080       |
-| Collab Service       | 8007        | 8007       |
+| Service                    | Docker Port | Local Port |
+|----------------------------|-------------|------------|
+| Frontend                   | 3000        | 3000       |
+| API Gateway                | 8000        | 8000       |
+| Question Service           | 8001        | 8001       |
+| Matching Service           | 8002        | 8002       |
+| User Service               | 8003        | 8003       |
+| User Service MongoDB       | 27017       | 27017      |
+| Zookeeper                  | -           | 8004       |
+| Kafka                      | -           | 8005       |
+| Kafka UI                   | 8006        | 8080       |
+| Collab Service             | 8007        | 8007       |
+| Chat Service               | 8009        | 8009       |
+| Matching WebSocket Service | 8008        | 8008       |
+| Redis                      | -           | 6379       |
