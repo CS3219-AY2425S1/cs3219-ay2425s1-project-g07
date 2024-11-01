@@ -41,7 +41,6 @@ import {
   Th,
   Td,
   TableContainer,
-  useBreakpointValue,
 } from "@chakra-ui/react";
 import { AtSignIcon, LinkIcon } from "@chakra-ui/icons";
 import { deleteUser, updateUser } from "@/services/userService";
