@@ -41,6 +41,7 @@ import {
   Th,
   Td,
   TableContainer,
+  useBreakpointValue,
 } from "@chakra-ui/react";
 import { AtSignIcon, LinkIcon } from "@chakra-ui/icons";
 import { deleteUser, updateUser } from "@/services/userService";
@@ -163,12 +164,7 @@ export default function ProfilePage() {
     }, [userId]);
 
     return (
-      <Card
-        minWidth={360}
-        maxWidth={500}
-        maxHeight={"-webkit-max-content"}
-        padding={"8px"}
-      >
+      <Card maxHeight={"-webkit-max-content"} padding={"8px"}>
         <Box>
           <Text fontSize="md" color="GrayText">
             Questions Stats
@@ -238,10 +234,10 @@ export default function ProfilePage() {
       });
     }, [userId]);
 
-    const headers = ["Question ID", "Difficulty", "Collaborator", "Date"];
+    const headers = ["Question", "Difficulty", "Collaborator", "Date"];
 
     return (
-      <Card backgroundColor={"#FFFFFF"} minWidth={800} maxWidth={1000}>
+      <Card backgroundColor={"#FFFFFF"}>
         <TableContainer>
           <Table variant="simple">
             <Thead>
@@ -254,7 +250,7 @@ export default function ProfilePage() {
             <Tbody>
               {history.map((item, index) => (
                 <Tr key={index}>
-                  <Td>{item.questionId}</Td>
+                  <Td>{item.questionTitle}</Td>
                   <Td>{item.questionDifficulty}</Td>
                   <Td>{item.collaboratorId}</Td>
                   <Td>{item.timeAttempted.toLocaleDateString()}</Td>
@@ -374,14 +370,14 @@ export default function ProfilePage() {
 
   return (
     <div className="p-8">
-      <Grid templateColumns="repeat(3, 1fr)" gap={6}>
-        <GridItem colSpan={1} rowSpan={2}>
+      <Grid templateColumns={{ base: "1fr", md: "repeat(3, 1fr)" }} gap={6}>
+        <GridItem colSpan={{ base: 1, md: 1 }} rowSpan={2}>
           <ProfileCard />
         </GridItem>
-        <GridItem colSpan={2}>
+        <GridItem colSpan={{ base: 1, md: 2 }}>
           <QuestionsStatsCard />
         </GridItem>
-        <GridItem colSpan={2}>
+        <GridItem colSpan={{ base: 1, md: 2 }}>
           <QuestionHistoryCard />
         </GridItem>
       </Grid>
