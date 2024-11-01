@@ -229,20 +229,35 @@ export default function MatchingPage() {
         collaboratorId: matchedWithUser,
         questionDifficulty: room.question.complexity,
         questionTopics: room.question.topics,
+        roomId: roomId,
+        questionTitle: room.question.title,
       })
         .then(() => {
-          router.push(`/collab/${roomId}`);
+          router.push(`/room/${roomId}`);
         })
         .catch((error) => {
           console.error("Error adding history:", error);
-          toast({
-            title: "Error",
-            description: "Failed to Process Match. Please try again.",
-            status: "error",
-            duration: 3000,
-            isClosable: true,
-            position: "top",
-          });
+
+          if (error.response && error.response.status === 409) {
+            toast({
+              title: "Conflict",
+              description: "Redirecting to room, please wait...",
+              status: "warning",
+              duration: 3000,
+              isClosable: true,
+              position: "top",
+            });
+            router.push(`/room/${roomId}`);
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to Process Match. Please try again.",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+              position: "top",
+            });
+          }
         });
     });
   };
