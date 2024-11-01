@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const baseDomain = process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || process.env.NEXT_PUBLIC_USER_SERVICE_DOMAIN || "http://localhost:8003"
+const baseDomain = process.env.NEXT_PUBLIC_USER_SERVICE_DOMAIN || process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || "http://localhost:8003"
 
 export const createUser = async (username: string, email: string, password: string) => {
   try {

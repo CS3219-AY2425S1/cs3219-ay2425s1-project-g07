@@ -2,7 +2,7 @@ import axios from 'axios';
 import { AxiosError } from 'axios';
 import { Question } from '../types/Question';
 
-const baseDomain = process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || process.env.NEXT_PUBLIC_QUESTION_SERVICE_DOMAIN || "http://localhost:8001"
+const baseDomain = process.env.NEXT_PUBLIC_QUESTION_SERVICE_DOMAIN || process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || "http://localhost:8001"
 
 export const fetchQuestions = async () => {
   try {
