@@ -1,108 +1,125 @@
 "use client";
 
 import {
-  Avatar,
-  Button,
-  Card,
-  HStack,
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogContent,
-  AlertDialogOverlay,
-  Tag,
-  TagLabel,
-  TagLeftIcon,
-  VStack,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
+	Avatar,
+	Button,
+	Card,
+	HStack,
+	AlertDialog,
+	AlertDialogBody,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogContent,
+	AlertDialogOverlay,
+	Tag,
+	TagLabel,
+	TagLeftIcon,
+	VStack,
+	Modal,
+	ModalOverlay,
+	ModalContent,
+	ModalHeader,
+	ModalFooter,
+	ModalBody,
+	ModalCloseButton,
+	FormControl,
+	FormLabel,
+	Input,
 	useToast
 } from "@chakra-ui/react";
 import { AtSignIcon, LinkIcon } from "@chakra-ui/icons";
 import useAuth from "@/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
-import { deleteUser, updateUser } from "@/services/userService";
+import { deleteUser, updateUser, logout } from "@/services/userService";
 
 export const ProfileCard = () => {
 	const { username, email, userId, setUsername, setEmail } = useAuth();
 	const [isEdit, setIsEdit] = useState(false);
-  const [isAlertOpen, setIsAlertOpen] = useState(false);
-  const [newUsername, setNewUsername] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const cancelRef = useRef<HTMLButtonElement>(null);
+	const [isAlertOpen, setIsAlertOpen] = useState(false);
+	const [newUsername, setNewUsername] = useState("");
+	const [newEmail, setNewEmail] = useState("");
+	const cancelRef = useRef<HTMLButtonElement>(null);
 	const toast = useToast();
 
 	useEffect(() => {
-    setNewUsername(username);
-    setNewEmail(email);
-  }, [username, email]);
+		setNewUsername(username);
+		setNewEmail(email);
+	}, [username, email]);
 
 	const handleDeleteProfile = () => {
-    try {
-      deleteUser(userId);
-    } catch (error) {
-      toast.closeAll();
-      toast({
-        title: "Error",
-        description: "Failed to delete profile",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
+		try {
+			deleteUser(userId);
+		} catch (error) {
+			toast.closeAll();
+			toast({
+				title: "Error",
+				description: "Failed to delete profile",
+				status: "error",
+				duration: 3000,
+				isClosable: true,
+				position: "top",
+			});
+		}
+	}
 
-  const handleUpdateProfile = async () => {
-    if (!newUsername || !newEmail) {
-      toast.closeAll();
-      toast({
-        title: "Error",
-        description: "All fields are required",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
-      return;
-    }
+	const handleLogout = async () => {
+		try {
+			await logout();
+			window.location.href = "/login"; 
+		} catch (error) {
+			toast.closeAll();
+			toast({
+				title: "Error",
+				description: "Failed to logout",
+				status: "error",
+				duration: 3000,
+				isClosable: true,
+				position: "top",
+			});
+		}
+	};
 
-    try {
-      await updateUser(userId, { username: newUsername, email: newEmail });
-      toast.closeAll();
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
-      setIsEdit(false);
-      setUsername(newUsername);
-      setEmail(newEmail);
-      window.location.reload(); // This is a temporary fix to update the username in the navbar
-    } catch (error) {
-      toast.closeAll();
-      toast({
-        title: "Error",
-        description: "Failed to update profile",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
-    }
-  };
+	const handleUpdateProfile = async () => {
+		if (!newUsername || !newEmail) {
+			toast.closeAll();
+			toast({
+				title: "Error",
+				description: "All fields are required",
+				status: "error",
+				duration: 3000,
+				isClosable: true,
+				position: "top",
+			});
+			return;
+		}
+
+		try {
+			await updateUser(userId, { username: newUsername, email: newEmail });
+			toast.closeAll();
+			toast({
+				title: "Profile updated",
+				description: "Your profile has been updated successfully",
+				status: "success",
+				duration: 3000,
+				isClosable: true,
+				position: "top",
+			});
+			setIsEdit(false);
+			setUsername(newUsername);
+			setEmail(newEmail);
+			window.location.reload(); // This is a temporary fix to update the username in the navbar
+		} catch (error) {
+			toast.closeAll();
+			toast({
+				title: "Error",
+				description: "Failed to update profile",
+				status: "error",
+				duration: 3000,
+				isClosable: true,
+				position: "top",
+			});
+		}
+	};
 
 
 	return (
@@ -137,6 +154,13 @@ export const ProfileCard = () => {
 				onClick={() => setIsEdit(true)}
 			>
 				Edit Profile
+			</Button>
+			<Button
+				colorScheme="blue"
+				margin="10px"
+				onClick={() => handleLogout()}
+			>
+				Logout
 			</Button>
 			<Button
 				colorScheme="red"
