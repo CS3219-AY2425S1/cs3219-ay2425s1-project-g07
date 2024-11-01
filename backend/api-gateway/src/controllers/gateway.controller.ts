@@ -7,8 +7,9 @@ import { GatewayService } from '../services/gateway.service';
 export class GatewayController {
   private readonly questionServiceDomain: string;
   private readonly userServiceDomain: string;
-  private readonly matchingServiceDomain: string;
+  private readonly matchingWebsocketServiceDomain: string;
   private readonly collabServiceDomain: string;
+  private readonly historyServiceDomain: string;
 
   constructor(
     private readonly gatewayService: GatewayService,
@@ -16,8 +17,9 @@ export class GatewayController {
   ){
     this.questionServiceDomain = this.configService.get<string>('QUESTION_SERVICE_DOMAIN');
     this.userServiceDomain = this.configService.get<string>('USER_SERVICE_DOMAIN');
-    this.matchingServiceDomain = this.configService.get<string>('MATCHING_SERVICE_DOMAIN');
+    this.matchingWebsocketServiceDomain = this.configService.get<string>('MATCHING_WEBSOCKET_SERVICE_DOMAIN');
     this.collabServiceDomain = this.configService.get<string>('COLLAB_SERVICE_DOMAIN');
+    this.historyServiceDomain = this.configService.get<string>('HISTORY_SERVICE_DOMAIN');
   }
 
   @All('/')
@@ -41,25 +43,32 @@ export class GatewayController {
     this.gatewayService.handleRedirectRequest(req, res, this.userServiceDomain)
   }
 
-  // Matching service (can't stack...)
-  @All('match*')
-  async handleMatchingRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
-    this.gatewayService.handleRedirectRequest(req, res, this.matchingServiceDomain)
+  // Collab service http endpoints
+  @All('create-room')
+  async handleCreateRoomRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
+    this.gatewayService.handleRedirectRequest(req, res, this.collabServiceDomain)
   }
-  @Post('cancel-match*')
-  async handleCancelMatchRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
-    this.gatewayService.handleRedirectRequest(req, res, this.matchingServiceDomain)
-  }
-  @Get('check-match*')
-  async handleCheckMatchRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
-    this.gatewayService.handleRedirectRequest(req, res, this.matchingServiceDomain)
+  @All('rooms*')
+  async handleRoomRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
+    this.gatewayService.handleRedirectRequest(req, res, this.collabServiceDomain)
   }
 
-  // Collab service 
+  // History service
+  @All('history*')
+  async handleHistoryRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
+    this.gatewayService.handleRedirectRequest(req, res, this.historyServiceDomain)
+  }
+
+  // For Collab websocket (not working)
   @All('collab*')
   redirectToBackend(@Res() res: Response) {
     // redirect works on browser (to be tested)
     res.redirect(this.collabServiceDomain);
+  }
+  // Matching websocket service (not working)
+  @All('match*')
+  redirectToMatchSocketBackend(@Res() res: Response) {
+    res.redirect(this.matchingWebsocketServiceDomain);
   }
 
 }
