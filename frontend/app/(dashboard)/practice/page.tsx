@@ -17,21 +17,20 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { QuestionComplexity, QuestionTopic } from "@/types/Question";
 import {
-  cancelMatchRequest, getMatchSocket,
+  cancelMatchRequest,
+  getMatchSocket,
   makeMatchRequest,
-} from '@/services/matchingService';
+} from "@/services/matchingService";
 import { getRoom } from "@/services/collabService";
 import useAuth from "@/hooks/useAuth";
-import {
-  MatchRequestResponse,
-  MatchResult,
-} from '@/types/Match';
-import { Socket } from 'socket.io-client';
+import { MatchRequestResponse, MatchResult } from "@/types/Match";
+import { Socket } from "socket.io-client";
+import { addHistory } from "@/services/historyService";
 
 export default function MatchingPage() {
   const toast = useToast();
   const router = useRouter();
-  const { username } = useAuth();
+  const { username, userId } = useAuth();
 
   const MATCH_DURATION = 30;
 
@@ -80,106 +79,112 @@ export default function MatchingPage() {
     console.log("Sending match request...");
     const socket = getMatchSocket();
     setCheckMatchSocket(socket);
-    makeMatchRequest(socket, {
-      userId: username,
-      topic: topic,
-      difficulty: complexity,
-      timestamp: Date.now(),
-    }, (res: MatchRequestResponse) => {
-      console.log("Match request sent:", res);
+    makeMatchRequest(
+      socket,
+      {
+        userId: username,
+        topic: topic,
+        difficulty: complexity,
+        timestamp: Date.now(),
+      },
+      (res: MatchRequestResponse) => {
+        console.log("Match request sent:", res);
 
-      if (res.error || !res.expiry) return;
+        if (res.error || !res.expiry) return;
 
-      // Start countdown timer
-      let initialCountdown = Math.ceil((res.expiry - Date.now()) / 1000);
-      setCountdown(initialCountdown);
-      const interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 0) {
-            clearInterval(interval);
-            setCheckMatchInterval(null);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      setCheckMatchInterval(interval);
-    }).then((res: MatchResult) => {
-      if (checkMatchInterval) {
-        clearInterval(checkMatchInterval);
-        setCheckMatchInterval(null);
+        // Start countdown timer
+        let initialCountdown = Math.ceil((res.expiry - Date.now()) / 1000);
+        setCountdown(initialCountdown);
+        const interval = setInterval(() => {
+          setCountdown((prev) => {
+            if (prev <= 0) {
+              clearInterval(interval);
+              setCheckMatchInterval(null);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        setCheckMatchInterval(interval);
       }
+    )
+      .then((res: MatchResult) => {
+        if (checkMatchInterval) {
+          clearInterval(checkMatchInterval);
+          setCheckMatchInterval(null);
+        }
 
-      setCheckMatchSocket(null);
+        setCheckMatchSocket(null);
 
-      if (res.result === 'timeout') {
-        // On match timeout
+        if (res.result === "timeout") {
+          // On match timeout
+          setIsLoading(false);
+          toast.closeAll();
+          toast({
+            title: "Match Not Found",
+            description: "Please try again.",
+            status: "info",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+          setIsMatched(false);
+          setMatchedWithUser(undefined);
+
+          return;
+        }
+
+        if (res.result === "error" || !res.matchFound) {
+          setIsLoading(false);
+          toast.closeAll();
+          toast({
+            title: "Match Failed",
+            description: res.error,
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+            position: "top",
+          });
+          setIsMatched(false);
+          setMatchedWithUser(undefined);
+
+          return;
+        }
+
+        const matchFound = res.matchFound;
+
+        // On match found
         setIsLoading(false);
         toast.closeAll();
         toast({
-          title: "Match Not Found",
-          description: "Please try again.",
-          status: "info",
-          duration: 3000,
+          title: "Match Found",
+          description: "You have been matched!",
+          status: "success",
+          duration: 5000,
           isClosable: true,
           position: "top",
         });
-        setIsMatched(false);
-        setMatchedWithUser(undefined);
+        handleFoundMatch(matchFound.matchedRoom);
 
-        return;
-      }
-
-      if (res.result === 'error' || !res.matchFound) {
+        // Handle match found logic here
+        setIsMatched(true);
+        setMatchedWithUser(matchFound.matchedWithUserId);
+        setMatchedTopic(matchFound.matchedTopic);
+        setRoomId(matchFound.matchedRoom);
+      })
+      .catch((err) => {
+        console.error("Error sending match request:", err);
         setIsLoading(false);
         toast.closeAll();
         toast({
-          title: "Match Failed",
-          description: res.error,
+          title: "Error",
+          description: "Failed to send match request. Please try again.",
           status: "error",
           duration: 3000,
           isClosable: true,
           position: "top",
         });
-        setIsMatched(false);
-        setMatchedWithUser(undefined);
-
-        return;
-      }
-
-      const matchFound = res.matchFound;
-
-      // On match found
-      setIsLoading(false);
-      toast.closeAll();
-      toast({
-        title: "Match Found",
-        description: "You have been matched!",
-        status: "success",
-        duration: 5000,
-        isClosable: true,
-        position: "top",
       });
-      handleFoundMatch(matchFound.matchedRoom);
-
-      // Handle match found logic here
-      setIsMatched(true);
-      setMatchedWithUser(matchFound.matchedWithUserId);
-      setMatchedTopic(matchFound.matchedTopic);
-      setRoomId(matchFound.matchedRoom);
-    }).catch((err) => {
-      console.error("Error sending match request:", err);
-      setIsLoading(false);
-      toast.closeAll();
-      toast({
-        title: "Error",
-        description: "Failed to send match request. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-        position: "top",
-      });
-    });
   };
 
   const onCancelMatch = () => {
@@ -202,6 +207,61 @@ export default function MatchingPage() {
     cancelMatchRequest(checkMatchSocket);
   };
 
+  const onClickGoToRoom = () => {
+    getRoom(roomId).then((room) => {
+      const questionId = room.question._id;
+
+      if (matchedWithUser === undefined) {
+        console.error("Error getting room:");
+        return;
+      }
+
+      if (questionId === undefined) {
+        console.error("Error getting room:");
+        return;
+      }
+
+      addHistory({
+        studentId: userId,
+        questionId: questionId,
+        timeAttempted: new Date(),
+        timeCreated: new Date(),
+        collaboratorId: matchedWithUser,
+        questionDifficulty: room.question.complexity,
+        questionTopics: room.question.topics,
+        roomId: roomId,
+        questionTitle: room.question.title,
+      })
+        .then(() => {
+          router.push(`/room/${roomId}`);
+        })
+        .catch((error) => {
+          console.error("Error adding history:", error);
+
+          if (error.response && error.response.status === 409) {
+            toast({
+              title: "Conflict",
+              description: "Redirecting to room, please wait...",
+              status: "warning",
+              duration: 3000,
+              isClosable: true,
+              position: "top",
+            });
+            router.push(`/room/${roomId}`);
+          } else {
+            toast({
+              title: "Error",
+              description: "Failed to Process Match. Please try again.",
+              status: "error",
+              duration: 3000,
+              isClosable: true,
+              position: "top",
+            });
+          }
+        });
+    });
+  };
+
   const handleFoundMatch = (roomId: string) => {
     // Verify that room exists
     setTimeout(async () => {
@@ -212,7 +272,7 @@ export default function MatchingPage() {
         return;
       }
     }, 3000);
-  }
+  };
 
   return (
     <Flex justifyContent="center" h="100%">
@@ -334,11 +394,8 @@ export default function MatchingPage() {
                   </Text>
                 </GridItem>
                 <GridItem colSpan={2} textAlign="center">
-                  <Button
-                  colorScheme="teal"
-                  onClick={() => router.push(`/rooms/${roomId}`)}
-                  >
-                  Go to Code
+                  <Button colorScheme="teal" onClick={() => onClickGoToRoom()}>
+                    Go to Code
                   </Button>
                 </GridItem>
               </Grid>
