@@ -21,6 +21,7 @@ export class GatewayService {
       });
       res.status(response.status).json(response.data);
     } catch (error) {
+      console.log(error);
       res.status(error.response?.status || 500).json(error.response?.data || { 
         message: 'Service Unreachable Error',
         HTTP_METHOD: req.method,
