@@ -26,6 +26,7 @@
     "axios": "^1.7.7",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.8.1",
     "ws": "^8.18.0",
     "y-websocket": "^2.0.4",
     "yjs": "^13.6.20"
