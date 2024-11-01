@@ -4,11 +4,12 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN apk add --no-cache curl
 RUN npm install
 
 COPY . .
 
-EXPOSE 8001
+RUN npm run build
 
-CMD ["npm", "run", "start:dev"]
+EXPOSE 8007
+
+CMD ["npm", "run", "start:prod"]

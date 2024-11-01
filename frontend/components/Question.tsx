@@ -3,7 +3,7 @@ import { marked } from 'marked';
 import { Stack, Text } from '@chakra-ui/react';
 import { Room } from '@/types/Room';
 import { QuestionComplexity } from '@/types/Question';
-import { difficultyText, topicText } from '@/app/(dashboard)/questions/page';
+import { difficultyText, topicText } from '@/app/utils';
 
 type QuestionProps = {
   question: Room['question'];

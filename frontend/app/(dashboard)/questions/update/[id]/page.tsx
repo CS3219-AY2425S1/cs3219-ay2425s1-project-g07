@@ -5,7 +5,7 @@ import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, Flex, use
 import { getQuestionById, updateQuestion } from "@/services/questionService";
 import { Question, QuestionComplexity, QuestionTopic } from "@/types/Question";
 import { marked } from "marked";
-import { topicText } from "../../page";
+import { topicText } from "@/app/utils";
 import { useRouter } from 'next/navigation';
 
 export default function Page({ params }: { params: { id: string } }) {

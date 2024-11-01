@@ -2,14 +2,15 @@
 
 import React from 'react';
 import { useEffect, useState, useRef } from 'react';
-import { Table, Text, Thead, Tbody, Tr, Th, Td, TableContainer, Button, Spinner, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay } from '@chakra-ui/react';
-import { Question, QuestionComplexity, QuestionTopic } from '@/types/Question';
+import { Table, Thead, Tbody, Tr, Th, Td, TableContainer, Button, Spinner, IconButton, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay } from '@chakra-ui/react';
+import { Question } from '@/types/Question';
 import { fetchQuestions, deleteQuestion } from '@/services/questionService';
 import QuestionModal from './QuestionModal';
 import { TrashIcon } from '@/public/icons/TrashIcon';
 import { EditIcon } from '@/public/icons/EditIcon';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
+import { difficultyText, topicText } from '../../utils';
 
 export default function QuestionsPage() {
   const router = useRouter();
@@ -144,32 +145,4 @@ export default function QuestionsPage() {
       </AlertDialog>
     </div>
   );
-}
-
-export const difficultyText = (complexity: QuestionComplexity) => {
-  return (
-    <Text color={
-      complexity === QuestionComplexity.EASY ? 'green.500' :
-        complexity === QuestionComplexity.MEDIUM ? 'yellow.500' :
-          complexity === QuestionComplexity.HARD ? 'red.500' : 'gray.500'
-    } className='font-medium'>
-      {complexity.charAt(0).toUpperCase() + complexity.slice(1)}
-    </Text>
-  )
-}
-
-export const topicText = (topic: QuestionTopic, idx: number, onClick?: () => void) => {
-  return (
-    <span
-      key={idx}
-      className={`mx-2 bg-gray-200 px-3 py-2 rounded-2xl font-medium ${onClick ? 'cursor-pointer' : ''}`}
-      onClick={onClick}
-    >
-      {topic
-        .split('_')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-      }
-    </span>
-  )
 }

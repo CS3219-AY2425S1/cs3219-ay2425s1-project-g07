@@ -8,6 +8,12 @@ import { Question } from '../schemas/question.schema';
 @Controller('question')
 export class QuestionController {
     constructor(private readonly questionService: QuestionService) {}
+    @ApiOperation({ summary: 'Health check' })
+    @ApiResponse({ status: 200 })
+    @Get('health')
+    async health(): Promise<string> {
+        return 'OK';
+    }
 
     @ApiOperation({ summary: 'Create a new question' })
     @ApiResponse({ status: 201, type: Question })
