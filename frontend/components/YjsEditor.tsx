@@ -257,6 +257,9 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   return (
     connectedToRoom ? (
       <Flex direction="column" className='h-full'>
+        <Text fontSize="sm" fontFamily={'monospace'} padding="10px" backgroundColor="#f5f5f5" borderColor="gray.200">
+          JavaScript
+        </Text>
         <Editor
           height="100%"
           defaultValue="// some comment"
@@ -270,6 +273,7 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
         />
         <Textarea
           flex="0 0 20%"
+          fontFamily={'monospace'}
           backgroundColor="#f5f5f5"
           placeholder='Your code output will be shown here.'
           value={codeOutput}
