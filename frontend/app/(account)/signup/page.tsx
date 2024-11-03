@@ -24,6 +24,7 @@ export default function SignupPage() {
         status: 'error',
         duration: 3000,
         isClosable: true,
+        position: "top"
       });
       return;
     }
@@ -36,7 +37,7 @@ export default function SignupPage() {
         status: 'error',
         duration: 3000,
         isClosable: true,
-        position: "top",
+        position: "top"
       });
       return;
     }
