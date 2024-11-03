@@ -15,6 +15,8 @@ interface Message {
 	text: string;
 }
 
+const chatDomain = process.env.NEXT_PUBLIC_CHAT_SERVICE_DOMAIN || 'http://localhost:8009';
+
 export const ChatBox = ({ users, roomId }: ChatBoxProps) => {
 	const username = useAuth().username;
 	const [messages, setMessages] = useState<Message[]>([]);
@@ -23,7 +25,7 @@ export const ChatBox = ({ users, roomId }: ChatBoxProps) => {
 	const socketRef = useRef<Socket | null>(null);
 
 	useEffect(() => {
-		const newSocket = io('http://localhost:8009');
+		const newSocket = io(chatDomain);
 		socketRef.current = newSocket;
 		newSocket.emit("join room", roomId);
 

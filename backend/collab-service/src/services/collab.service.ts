@@ -12,8 +12,6 @@ export class CollabService {
 
   constructor(private configService: ConfigService) {
     this.cleanUpEmptyRooms();
-    // Create a default room for testing
-    this.createRoom('default', 'any', 'any');
   }
 
   async createRoom(roomId: string, topic: string, difficulty: string): Promise<RoomResponse> {

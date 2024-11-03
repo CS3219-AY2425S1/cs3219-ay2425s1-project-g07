@@ -7,6 +7,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_MATCHING_WEBSOCKET_SERVICE_DOMAIN: ${FE_MATCHING_WEBSOCKET_SERVICE_DOMAIN}
+      NEXT_PUBLIC_COLLAB_SERVICE_DOMAIN: ${FE_COLLAB_SERVICE_DOMAIN}
+      NEXT_PUBLIC_CHAT_SERVICE_DOMAIN: ${FE_CHAT_SERVICE_DOMAIN}
+      NEXT_PUBLIC_API_GATEWAY_DOMAIN: ${API_GATEWAY_DOMAIN}
     # volumes:
     #   - ./frontend:/app
     ports:
@@ -19,6 +24,8 @@ services:
     environment:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
       USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
+      COLLAB_SERVICE_DOMAIN: ${COLLAB_SERVICE_DOMAIN}
+      HISTORY_SERVICE_DOMAIN: ${HISTORY_SERVICE_DOMAIN}
     ports:
       - "8000:8000"
     # volumes:
@@ -65,6 +72,7 @@ services:
       KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
       MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID}
       COLLAB_SERVICE_DOMAIN: ${COLLAB_SERVICE_DOMAIN}
+      REDIS_DOMAIN: ${REDIS_DOMAIN}
     depends_on:
       kafka:
         condition: service_healthy
@@ -153,23 +161,12 @@ services:
       retries: 5
       start_period: 5s
 
-  kafka-ui:
-    container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
-    ports:
-      - "8006:8080"
-    environment:
-      DYNAMIC_CONFIG_ENABLED: "true"
-    volumes:
-      - ./backend/kui/config.yaml:/etc/kafkaui/dynamic_config.yaml
-
   redis:
     container_name: matching-redis
     image: redis:latest
     # No need to expose the port as it is only used internally (6379)
 
-  history-service:
-    container_name: history-service
+  history-app:
     build:
       context: ./backend/history-service
       dockerfile: Dockerfile
