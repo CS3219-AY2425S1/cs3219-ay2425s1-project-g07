@@ -74,7 +74,7 @@ export const QuestionsStatsCard = () => {
 								size="md"
 								key="easy-tag"
 								variant="solid"
-								colorScheme="blue"
+								colorScheme="green"
 								justifyContent={"center"}
 							>
 								<TagLabel> {easyQuestionAttempt} Easy</TagLabel>
@@ -83,7 +83,7 @@ export const QuestionsStatsCard = () => {
 								size="md"
 								key="med-tag"
 								variant="solid"
-								colorScheme="green"
+								colorScheme="yellow"
 								justifyContent={"center"}
 							>
 								<TagLabel>{mediumQuestionAttempt} Med</TagLabel>
@@ -92,7 +92,7 @@ export const QuestionsStatsCard = () => {
 								size="md"
 								key="hard-tag"
 								variant="solid"
-								colorScheme="orange"
+								colorScheme="red"
 								justifyContent={"center"}
 							>
 								<TagLabel> {hardQuestionAttempt} Hard</TagLabel>
