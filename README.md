@@ -38,9 +38,9 @@ rm -rf backend/service_name/.git
 | User Service MongoDB       | 27017       | 27017      |
 | Zookeeper                  | -           | 8004       |
 | Kafka                      | -           | 8005       |
-| Kafka UI                   | 8006        | 8080       |
 | Collab Service             | 8007        | 8007       |
-| History Service            | 8090        | 8090       |
-| Chat Service               | 8009        | 8009       |
 | Matching WebSocket Service | 8008        | 8008       |
+| Chat Service               | 8009        | 8009       |
+| Kafka UI                   | 8006        | 8080       |
+| History Service            | 8090        | 8090       |
 | Redis                      | -           | 6379       |

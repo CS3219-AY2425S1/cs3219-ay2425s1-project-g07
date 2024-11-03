@@ -50,6 +50,8 @@ interface IProps {
   onConnectionChange?: (status: 'connected' | 'disconnected') => void;
 }
 
+const collabDomain = process.env.NEXT_PUBLIC_COLLAB_SERVICE_DOMAIN || 'http://localhost:8007';
+
 const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [connectedToRoom, setConnectedToRoom] = useState(false);
@@ -67,7 +69,7 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
 
   useEffect(() => {
     const provider = new WebsocketProvider(
-      'ws://localhost:8007/code',
+      `${collabDomain.replace('http','ws')}/code`,
       roomId,
       ydoc,
       { maxBackoffTime: 4000, params: { userId } }

@@ -31,6 +31,7 @@ export class MatchingWebSocketService implements OnModuleInit {
   private readonly REQUEST_TIMEOUT_MS = 30000; // epoch time 30s
   private readonly kafkaBrokerUri: string;
   private readonly consumerGroupId: string;
+  private readonly redisDomain: string;
   private readonly kafka: Kafka;
   private readonly producer: Producer;
   private readonly consumer: Consumer;
@@ -55,6 +56,7 @@ export class MatchingWebSocketService implements OnModuleInit {
   constructor(private configService: ConfigService) {
     this.kafkaBrokerUri = this.getKafkaBrokerUri();
     this.consumerGroupId = this.getConsumerGroupId();
+    this.redisDomain = this.getRedisDomain();
     this.kafka = new Kafka({
       clientId: 'matching-websocket-service',
       brokers: [this.kafkaBrokerUri],
@@ -65,7 +67,7 @@ export class MatchingWebSocketService implements OnModuleInit {
     this.consumer = this.kafka.consumer({ groupId: this.consumerGroupId });
 
     this.redisClient = createClient({
-      url: 'redis://redis:6379'
+      url: this.redisDomain
     });
     this.redisClient.on('error', (err) => {
       console.log(`Redis error: ${err}`);
@@ -219,6 +221,10 @@ export class MatchingWebSocketService implements OnModuleInit {
 
   private getConsumerGroupId(): string {
     return this.configService.get<string>('config.consumerGroupId');
+  }
+
+  private getRedisDomain(): string {
+    return this.configService.get<string>('config.redisDomain');
   }
 
   private async userAlreadyInMatch(userId: string): Promise<boolean> {

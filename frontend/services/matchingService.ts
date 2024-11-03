@@ -6,26 +6,19 @@ import {
   MatchFoundResponse, MatchResult,
 } from '../types/Match';
 
+// Go directly to matching websockets
+const baseDomain = process.env.NEXT_PUBLIC_MATCHING_WEBSOCKET_SERVICE_DOMAIN || "http://localhost:8008";
+
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:8002",
+  baseURL: baseDomain,
   timeout: 5000,
   headers: {
     "Content-Type": "application/json",
   }, // can be used to sent auth token as well
 });
 
-export const testSend = async () => {
-  try {
-    const response = await axiosInstance.get("/test-send");
-    return response.data;
-  } catch (error) {
-    console.error("Error sending test message:", error);
-    throw error;
-  }
-};
-
 export const getMatchSocket = () => {
-  return io(`ws://localhost:${process.env.MATCHING_WEBSOCKET_SERVICE_PORT ?? 8008}`, {
+  return io(baseDomain, {
     reconnection: false,
     timeout: 3000,
   });
