@@ -122,7 +122,7 @@ export default function Page({ params }: { params: { id: string } }) {
         <FormLabel>Topics</FormLabel>
         <Select name="topics" value="" onChange={handleTopicsChange}>
           <option value="" disabled>Select a topic</option>
-          {Object.values(QuestionTopic).map((topic) => (
+          {Object.values(QuestionTopic).filter((topic) => topic !== "any").map((topic) => (
             <option key={topic} value={topic}>
               {topic}
             </option>
