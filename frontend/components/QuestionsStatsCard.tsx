@@ -21,7 +21,7 @@ import { Question } from "@/types/Question";
 export const QuestionsStatsCard = () => {
 	const [questionsAttempted, setQuestionsAttempted] = useState(0);
 	const [totalQuestions, setTotalQuestions] = useState(0);
-	const [easyQuestionAttempt, setEasyQuestionAttempt] = useState(100);
+	const [easyQuestionAttempt, setEasyQuestionAttempt] = useState(0);
 	const [mediumQuestionAttempt, setMediumQuestionAttempt] = useState(0);
 	const [hardQuestionAttempt, setHardQuestionAttempt] = useState(0);
 
@@ -65,7 +65,6 @@ export const QuestionsStatsCard = () => {
 							<Text fontSize="3xl" fontStyle={"bold"}>
 								{questionsAttempted}
 							</Text>
-							<Text fontSize="sm">/ {totalQuestions}</Text>
 						</HStack>
 					</GridItem>
 					<GridItem rowSpan={1} colSpan={1}>
