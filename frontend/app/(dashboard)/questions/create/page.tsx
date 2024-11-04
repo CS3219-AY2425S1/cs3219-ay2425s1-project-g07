@@ -1,14 +1,16 @@
 "use client";
 
-import { Box, Button, FormControl, FormLabel, Input, Select, Flex, Textarea, useToast } from "@chakra-ui/react";
+import { Box, Button, FormControl, FormLabel, Input, Select, Flex, Textarea, useToast, Spinner } from "@chakra-ui/react";
 import { useState } from "react";
 import { Question, QuestionComplexity, QuestionTopic } from "@/types/Question";
 import { createQuestion } from "@/services/questionService";
 import { marked } from 'marked';
 import { topicText } from '@/app/utils';
 import { useRouter } from 'next/navigation';
+import useAuth from "@/hooks/useAuth";
 
 export default function CreateQuestionPage() {
+  const { isAdmin, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
 
@@ -73,6 +75,11 @@ export default function CreateQuestionPage() {
       }
     }
   };
+
+  // Prevent non-admin users from accessing the page
+  if (!isLoading && !isAdmin) {
+    router.push('/questions');
+  }
 
   return (
     <Box p={8} h="100%">
@@ -142,14 +149,16 @@ export default function CreateQuestionPage() {
         <Input name="link" value={link} onChange={handleLinkChange} />
       </FormControl>
 
-      <Flex alignItems="center" gap={4}>
-        <Button colorScheme="teal" onClick={handleSubmit}>
-          Create
-        </Button>
-        <Button colorScheme="red" onClick={() => router.push('/questions')}>
-          Cancel
-        </Button>
-      </Flex>
+      {isAdmin && (
+        <Flex alignItems="center" gap={4}>
+          <Button colorScheme="teal" onClick={handleSubmit}>
+            Create
+          </Button>
+          <Button colorScheme="red" onClick={() => router.push('/questions')}>
+            Cancel
+          </Button>
+        </Flex>
+      )}
     </Box>
   );
 }
