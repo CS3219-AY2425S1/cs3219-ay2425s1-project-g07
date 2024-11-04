@@ -35,4 +35,5 @@ export type Question = {
   topics: QuestionTopic[];
   complexity: QuestionComplexity;
   link: string;
+  solution: string;
 };

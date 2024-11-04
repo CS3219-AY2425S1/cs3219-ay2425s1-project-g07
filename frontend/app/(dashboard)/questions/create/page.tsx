@@ -8,6 +8,7 @@ import { marked } from 'marked';
 import { topicText } from '@/app/utils';
 import { useRouter } from 'next/navigation';
 import useAuth from "@/hooks/useAuth";
+import Editor from '@monaco-editor/react';
 
 export default function CreateQuestionPage() {
   const { isAdmin, isLoading } = useAuth();
@@ -19,6 +20,7 @@ export default function CreateQuestionPage() {
   const [topics, setTopics] = useState<Set<QuestionTopic>>(new Set());
   const [complexity, setComplexity] = useState<QuestionComplexity | undefined>();
   const [link, setLink] = useState("");
+  const [solution, setSolution] = useState("def main():\n\tprint(\"Hello, World!\")");
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value);
@@ -30,7 +32,7 @@ export default function CreateQuestionPage() {
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => setLink(e.target.value);
 
   const handleSubmit = async () => {
-    if (!title || !description || topics.size === 0 || !complexity || !link) {
+    if (!title || !description || topics.size === 0 || !complexity || !link || !solution) {
       toast.closeAll();
       toast({
         title: "All fields are required.",
@@ -48,6 +50,7 @@ export default function CreateQuestionPage() {
       topics: Array.from(topics),
       complexity,
       link,
+      solution,
     };
 
     try {
@@ -149,8 +152,25 @@ export default function CreateQuestionPage() {
         <Input name="link" value={link} onChange={handleLinkChange} />
       </FormControl>
 
+      <FormControl id="solution" mb={4} isRequired>
+        <FormLabel>Solution (Python)</FormLabel>
+        <Box height="400px" border="1px" borderColor="gray.200" borderRadius="md">
+          <Editor
+            height="100%"
+            value={solution}
+            onChange={(value) => setSolution(value || "")}
+            theme='vs-dark'
+            defaultLanguage="python"
+            options={{
+              minimap: { enabled: false },
+              automaticLayout: true
+            }}
+          />
+        </Box>
+      </FormControl>
+
       {isAdmin && (
-        <Flex alignItems="center" gap={4}>
+        <Flex alignItems="center" gap={4} pb={4}>
           <Button colorScheme="teal" onClick={handleSubmit}>
             Create
           </Button>

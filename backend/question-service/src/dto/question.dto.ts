@@ -34,6 +34,11 @@ export class CreateQuestionDto {
     @IsString()
     @IsNotEmpty()
     readonly link: string;
+
+    @ApiProperty()
+    @IsString()
+    @IsNotEmpty()
+    readonly solution: string;
 }
 
 export class UpdateQuestionDto extends PartialType(CreateQuestionDto) { }

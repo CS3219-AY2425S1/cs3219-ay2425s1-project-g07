@@ -8,6 +8,7 @@ import { marked } from "marked";
 import { topicText } from "@/app/utils";
 import { useRouter } from 'next/navigation';
 import useAuth from "@/hooks/useAuth";
+import Editor from '@monaco-editor/react';
 
 export default function Page({ params }: { params: { id: string } }) {
   const { isAdmin, isLoading } = useAuth();
@@ -20,6 +21,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const [topics, setTopics] = useState<Set<QuestionTopic>>(new Set());
   const [complexity, setComplexity] = useState<QuestionComplexity | "">("");
   const [link, setLink] = useState("");
+  const [solution, setSolution] = useState("");
 
   useEffect(() => {
     async function fetchQuestion() {
@@ -30,6 +32,7 @@ export default function Page({ params }: { params: { id: string } }) {
         setTopics(new Set(question.topics));
         setComplexity(question.complexity);
         setLink(question.link);
+        setSolution(question.solution);
       }
     }
 
@@ -46,7 +49,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => setLink(e.target.value);
 
   const handleSubmit = async () => {
-    if (!title || !description || topics.size === 0 || !complexity || !link) {
+    if (!title || !description || topics.size === 0 || !complexity || !link || !solution) {
       toast.closeAll();
       toast({
         title: "All fields are required.",
@@ -64,6 +67,7 @@ export default function Page({ params }: { params: { id: string } }) {
       topics: Array.from(topics),
       complexity: complexity as QuestionComplexity,
       link,
+      solution,
     };
 
     try {
@@ -165,8 +169,25 @@ export default function Page({ params }: { params: { id: string } }) {
         <Input name="link" value={link} onChange={handleLinkChange} />
       </FormControl>
 
+      <FormControl id="solution" mb={4} isRequired>
+        <FormLabel>Solution (Python)</FormLabel>
+        <Box height="400px" border="1px" borderColor="gray.200" borderRadius="md">
+          <Editor
+            height="100%"
+            value={solution}
+            onChange={(value) => setSolution(value || "")}
+            theme='vs-dark'
+            defaultLanguage="python"
+            options={{
+              minimap: { enabled: false },
+              automaticLayout: true
+            }}
+          />
+        </Box>
+      </FormControl>
+
       {isAdmin && (
-        <Flex alignItems="center" gap={4}>
+        <Flex alignItems="center" gap={4} pb={4}>
           <Button colorScheme="teal" onClick={handleSubmit}>
             Update
           </Button>
