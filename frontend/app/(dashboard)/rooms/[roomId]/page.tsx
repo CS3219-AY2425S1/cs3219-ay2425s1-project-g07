@@ -20,7 +20,6 @@ export default function Page({ params }: PageParams) {
   const [room, setRoom] = useState<Room>();
   const [loading, setLoading] = useState(true);
   const { username } = useAuth();
-  const [currentTab, setCurrentTab] = useState('code_editor');
 
   useEffect(() => {
     const fetchRoom = async () => {

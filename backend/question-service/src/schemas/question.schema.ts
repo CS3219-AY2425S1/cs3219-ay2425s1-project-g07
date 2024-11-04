@@ -52,6 +52,8 @@ export class Question {
     @Prop({ required: true })
     link: string;
 
+    @Prop({ required: true })
+    solution: string;
 }
 
 export const QuestionSchema = SchemaFactory.createForClass(Question);
