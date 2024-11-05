@@ -65,6 +65,10 @@ export const QuestionsStatsCard = () => {
 							<Text fontSize="3xl" fontStyle={"bold"}>
 								{questionsAttempted}
 							</Text>
+							<Text fontSize="lg" color="GrayText">
+								{" "}
+								attempted
+							</Text>
 						</HStack>
 					</GridItem>
 					<GridItem rowSpan={1} colSpan={1}>
