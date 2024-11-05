@@ -70,7 +70,7 @@ export class CollabService implements OnModuleInit {
         id: room.id,
         users: Array.from(room.users),
         question: room.question,
-        doc: room.doc.guid,
+        doc: room.doc.guid
       };
     }
 

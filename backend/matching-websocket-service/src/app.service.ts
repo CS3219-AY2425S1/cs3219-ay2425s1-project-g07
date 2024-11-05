@@ -114,13 +114,6 @@ export class MatchingWebSocketService implements OnModuleInit {
   }
 
   private async handleMatchMessage(messageBody: MatchMessage) {
-    // Create a collab room for the matched users
-    // const [difficulty, topic] = messageBody.matchedTopic.split('-');
-    // try {
-    //   await this.createCollabRoom(messageBody.matchedRoom, topic, difficulty);
-    // } catch (e) {
-    //   console.error(`Failed to create collab room: ${e}`);
-    // }
     // Notify both users of match using userID to socket mapping
     if (messageBody.userId1 in this.userSocketMap) {
       const res = this.userSocketMap[messageBody.userId1];
