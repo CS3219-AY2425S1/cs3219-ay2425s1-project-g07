@@ -4,11 +4,13 @@ import * as Y from 'yjs';
 import { Room, RoomResponse } from '../interfaces/room.interface';
 import axios from 'axios';
 import { Question } from '../interfaces/room.interface';
+import { clearInterval } from 'timers';
 
 @Injectable()
 export class CollabService {
   private rooms: Map<string, Room> = new Map(); // roomId -> Room
   private userRooms: Map<string, string> = new Map(); // userId -> roomId
+  private intervalId: NodeJS.Timeout;
 
   constructor(private configService: ConfigService) {
     this.cleanUpEmptyRooms();
@@ -129,7 +131,7 @@ export class CollabService {
   }
 
   private cleanUpEmptyRooms() {
-    setInterval(() => {
+    this.intervalId = setInterval(() => {
       this.rooms.forEach((room, roomId) => {
         if (room.users.size === 0 && roomId !== 'default') {
           console.log(`Cleaning up room ${roomId}`);
@@ -139,7 +141,7 @@ export class CollabService {
     }, 5 * 60 * 1000); // 5 minutes in milliseconds
   }
 
-  private async getQuestion(topic: string, difficulty: string): Promise<Question> {
+  async getQuestion(topic: string, difficulty: string): Promise<Question> {
     let queryTopic: string, queryDifficulty: string;
     if (topic != 'any') {
         queryTopic = topic;
@@ -152,6 +154,12 @@ export class CollabService {
       params: { topic: queryTopic, difficulty: queryDifficulty }
     });
     return response.data as Question;
+  }
+
+
+  // For testing or onDestroy
+  clearIntervals() {
+    clearInterval(this.intervalId);
   }
 
 }

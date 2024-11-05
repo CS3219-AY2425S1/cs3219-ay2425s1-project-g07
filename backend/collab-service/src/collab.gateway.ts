@@ -58,7 +58,7 @@ export class CollabGateway implements OnModuleInit {
     this.server = server;
   }
 
-  private extractInfoFromUrl(url: string): { roomId: string, userId: string } {
+  extractInfoFromUrl(url: string): { roomId: string, userId: string } {
     const match = url.match(/\/code\/(.*)$/);
     if (!match) {
       return { roomId: null , userId: null };
