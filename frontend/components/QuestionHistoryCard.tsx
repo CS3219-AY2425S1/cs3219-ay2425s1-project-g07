@@ -14,6 +14,8 @@ import {
 import useAuth from "@/hooks/useAuth";
 import { getQuestionHistory } from "@/services/historyService";
 import { QuestionHistory } from "@/types/History";
+import { QuestionComplexity } from "@/types/Question";
+import { difficultyText } from "@/app/utils";
 
 export const QuestionHistoryCard = () => {
 	const [history, setHistory] = useState<QuestionHistory[]>([]);
@@ -44,7 +46,7 @@ export const QuestionHistoryCard = () => {
 						{history.map((item, index) => (
 							<Tr key={index}>
 								<Td>{item.questionTitle}</Td>
-								<Td>{item.questionDifficulty}</Td>
+								<Td>{difficultyText(item.questionDifficulty as QuestionComplexity)}</Td>
 								<Td>{item.collaboratorId}</Td>
 								<Td>{item.timeAttempted.toLocaleDateString()}</Td>
 							</Tr>

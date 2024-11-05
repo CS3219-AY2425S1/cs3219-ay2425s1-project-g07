@@ -21,7 +21,7 @@ import { Question } from "@/types/Question";
 export const QuestionsStatsCard = () => {
 	const [questionsAttempted, setQuestionsAttempted] = useState(0);
 	const [totalQuestions, setTotalQuestions] = useState(0);
-	const [easyQuestionAttempt, setEasyQuestionAttempt] = useState(100);
+	const [easyQuestionAttempt, setEasyQuestionAttempt] = useState(0);
 	const [mediumQuestionAttempt, setMediumQuestionAttempt] = useState(0);
 	const [hardQuestionAttempt, setHardQuestionAttempt] = useState(0);
 
@@ -65,7 +65,10 @@ export const QuestionsStatsCard = () => {
 							<Text fontSize="3xl" fontStyle={"bold"}>
 								{questionsAttempted}
 							</Text>
-							<Text fontSize="sm">/ {totalQuestions}</Text>
+							<Text fontSize="lg" color="GrayText">
+								{" "}
+								attempted
+							</Text>
 						</HStack>
 					</GridItem>
 					<GridItem rowSpan={1} colSpan={1}>
@@ -74,7 +77,7 @@ export const QuestionsStatsCard = () => {
 								size="md"
 								key="easy-tag"
 								variant="solid"
-								colorScheme="blue"
+								colorScheme="green"
 								justifyContent={"center"}
 							>
 								<TagLabel> {easyQuestionAttempt} Easy</TagLabel>
@@ -83,7 +86,7 @@ export const QuestionsStatsCard = () => {
 								size="md"
 								key="med-tag"
 								variant="solid"
-								colorScheme="green"
+								colorScheme="yellow"
 								justifyContent={"center"}
 							>
 								<TagLabel>{mediumQuestionAttempt} Med</TagLabel>
@@ -92,7 +95,7 @@ export const QuestionsStatsCard = () => {
 								size="md"
 								key="hard-tag"
 								variant="solid"
-								colorScheme="orange"
+								colorScheme="red"
 								justifyContent={"center"}
 							>
 								<TagLabel> {hardQuestionAttempt} Hard</TagLabel>

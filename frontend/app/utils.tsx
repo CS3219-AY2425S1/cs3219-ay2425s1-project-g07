@@ -29,3 +29,10 @@ export const topicText = (topic: QuestionTopic, idx: number, onClick?: () => voi
     </span>
   )
 }
+
+export const formatQuestionTopic = (topic: QuestionTopic) => {
+  return topic
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}

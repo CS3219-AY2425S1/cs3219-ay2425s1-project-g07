@@ -26,6 +26,7 @@ import useAuth from "@/hooks/useAuth";
 import { MatchRequestResponse, MatchResult } from "@/types/Match";
 import { Socket } from "socket.io-client";
 import { addHistory } from "@/services/historyService";
+import { formatQuestionTopic } from "@/app/utils";
 
 export default function MatchingPage() {
   const toast = useToast();
@@ -290,7 +291,7 @@ export default function MatchingPage() {
             </option>
             {Object.values(QuestionTopic).map((topic) => (
               <option key={topic} value={topic}>
-                {topic}
+                {formatQuestionTopic(topic)}
               </option>
             ))}
           </Select>
@@ -309,7 +310,7 @@ export default function MatchingPage() {
             </option>
             {Object.values(QuestionComplexity).map((complexity) => (
               <option key={complexity} value={complexity}>
-                {complexity}
+                {complexity.charAt(0).toUpperCase() + complexity.slice(1)}
               </option>
             ))}
           </Select>
@@ -370,7 +371,7 @@ export default function MatchingPage() {
                 </GridItem>
                 <GridItem>
                   <Text fontSize="lg" color="teal.500">
-                    {matchedTopic.split("-")[0]}
+                    {matchedTopic.split("-")[0].charAt(0).toUpperCase() + matchedTopic.split("-")[0].slice(1)}
                   </Text>
                 </GridItem>
                 <GridItem>
@@ -380,7 +381,7 @@ export default function MatchingPage() {
                 </GridItem>
                 <GridItem>
                   <Text fontSize="lg" color="teal.500">
-                    {matchedTopic.split("-")[1]}
+                    {formatQuestionTopic(matchedTopic.split("-")[1] as QuestionTopic)}
                   </Text>
                 </GridItem>
                 <GridItem>

@@ -17,8 +17,8 @@ import { useRouter } from 'next/navigation';
 const items: NavbarCardProps[] = [
   {
     imageSrc: questionImage,
-    title: "My Questions",
-    description: "Review your attempted questions here.",
+    title: "All Questions",
+    description: "Create, edit, and view all questions here.",
     route: "/questions",
   },
   {
