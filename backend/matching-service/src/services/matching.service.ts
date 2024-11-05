@@ -2,8 +2,8 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Consumer, Kafka, Producer } from 'kafkajs';
 import { randomUUID } from 'crypto';
-import { Queue } from 'src/utils/queue';
-import { QuestionComplexity, QuestionTopic } from 'src/dto/request.dto';
+import { Queue } from '../utils/queue';
+import { QuestionComplexity, QuestionTopic } from '../dto/request.dto';
 
 export enum MatchStatus {
   PENDING = 'PENDING',
@@ -22,12 +22,13 @@ type UserEntry = {
   expiryTime: number;
 }
 
-enum MessageAction {
+// exported for testing
+export enum MessageAction {
   REQUEST_MATCH = 'REQUEST_MATCH',
   CANCEL_MATCH = 'CANCEL_MATCH'
 }
 
-type Message = {
+export type Message = {
   action: MessageAction;
   userId: string;
   timestamp: number;
@@ -139,7 +140,7 @@ export class MatchingService implements OnModuleInit {
     await this.consumer.subscribe({ topics: allTopics, fromBeginning: false });
   }
 
-  private matchTopics(kafkaTopic1: string, kafkaTopic2: string): boolean {
+  matchTopics(kafkaTopic1: string, kafkaTopic2: string): boolean {
     if (kafkaTopic1 === kafkaTopic2) {
       return true;
     }
@@ -165,7 +166,7 @@ export class MatchingService implements OnModuleInit {
   }
 
   // Only called when matched
-  private getMatchedTopic(kafkaTopic1: string, kafkaTopic2: string): string {
+  getMatchedTopic(kafkaTopic1: string, kafkaTopic2: string): string {
     if (kafkaTopic1 === kafkaTopic2) {
       return kafkaTopic1;
     }
@@ -187,7 +188,7 @@ export class MatchingService implements OnModuleInit {
     return `${matchedDifficulty}-${matchedTopic}`;
   }
 
-  private async handleMatchRequest(kafkaTopic: string, matchRequest: Message) {
+  async handleMatchRequest(kafkaTopic: string, matchRequest: Message) {
       const requesterUserId = matchRequest.userId;
       const currTime = Date.now();
 
@@ -240,7 +241,7 @@ export class MatchingService implements OnModuleInit {
       await this.requestQueue.print();
   }
 
-  private async handleCancelRequest(topic: string, cancelRequest: Message) {
+  async handleCancelRequest(topic: string, cancelRequest: Message) {
     const requesterUserId = cancelRequest.userId;
 
     console.log(`Received cancel request: ${cancelRequest} on topic: ${topic}`);
@@ -250,7 +251,7 @@ export class MatchingService implements OnModuleInit {
     console.log(`Match request cancelled for ${requesterUserId} in topic: ${topic}`);
   }
 
-  private async consumeMessages() {
+  async consumeMessages() {
     await this.consumer.run({
       eachMessage: async ({ topic, message }) => {
         const messageString = message.value.toString();
