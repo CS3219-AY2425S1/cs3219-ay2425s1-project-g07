@@ -1,27 +1,76 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as Y from 'yjs';
 import { Room, RoomResponse } from '../interfaces/room.interface';
 import axios from 'axios';
 import { Question } from '../interfaces/room.interface';
+import { Consumer, Kafka } from 'kafkajs';
+
+type MatchMessage = {
+  userId1: string;
+  userId2: string;
+  matchedTopic: string;
+  matchedRoom: string;
+}
 
 @Injectable()
-export class CollabService {
+export class CollabService implements OnModuleInit {
   private rooms: Map<string, Room> = new Map(); // roomId -> Room
   private userRooms: Map<string, string> = new Map(); // userId -> roomId
 
+  private readonly kafkaBrokerUri: string;
+  private readonly consumerGroupId: string;
+  private readonly kafka: Kafka;
+  private readonly consumer: Consumer;
+
   constructor(private configService: ConfigService) {
     this.cleanUpEmptyRooms();
+
+    this.kafkaBrokerUri = this.getKafkaBrokerUri();
+    this.consumerGroupId = this.getConsumerGroupId();
+    this.kafka = new Kafka({
+      clientId: 'collab-service',
+      brokers: [this.kafkaBrokerUri],
+    });
+    this.consumer = this.kafka.consumer({ groupId: this.consumerGroupId });
   }
 
-  async createRoom(roomId: string, topic: string, difficulty: string): Promise<RoomResponse> {
+  async onModuleInit() {
+    await this.consumer.connect();
+    await this.subscribeToTopics();
+    // Consume message loop
+    this.consumeMessages();
+  }
+
+  private async subscribeToTopics() {
+    await this.consumer.subscribe({ topics: ['matches'] });
+  }
+
+  private consumeMessages() {
+    this.consumer.run({
+      eachMessage: async ({ topic, message }) => {
+        const messageString = message.value.toString();
+        const messageBody = JSON.parse(messageString);
+
+        console.log(`Received message from topic ${topic}:`, messageBody);
+
+        if (topic === 'matches') {
+          const matchMessage = messageBody as MatchMessage;
+          const [difficulty, topic] = matchMessage.matchedTopic.split('-');
+          this.createRoom(matchMessage.matchedRoom, topic, difficulty, matchMessage.userId1, matchMessage.userId2);
+        }
+      },
+    })
+  }
+
+  async createRoom(roomId: string, topic: string, difficulty: string, user1: string, user2: string): Promise<RoomResponse> {
     if (this.rooms.has(roomId)) {
       const room = this.rooms.get(roomId);
       return {
         id: room.id,
         users: Array.from(room.users),
         question: room.question,
-        doc: room.doc.guid
+        doc: room.doc.guid,
       };
     }
 
@@ -34,7 +83,9 @@ export class CollabService {
       id: roomId,
       users: new Set(),
       question: question,
-      doc: new Y.Doc()
+      doc: new Y.Doc(),
+      user1: user1,
+      user2: user2
     };
 
     this.rooms.set(roomId, room);
@@ -50,7 +101,7 @@ export class CollabService {
   joinRoom(roomId: string, userId: string): RoomResponse | null {
     const room = this.rooms.get(roomId);
     
-    if (!room || room.users.size >= 2) {
+    if (!room || room.users.size >= 2 || (room.user1 !== userId && room.user2 !== userId)) {
       return null;
     }
 
@@ -154,4 +205,11 @@ export class CollabService {
     return response.data as Question;
   }
 
+  private getKafkaBrokerUri(): string {
+    return this.configService.get<string>('config.kafkaBrokerUri');
+  }
+
+  private getConsumerGroupId(): string {
+    return this.configService.get<string>('config.consumerGroupId');
+  }
 }

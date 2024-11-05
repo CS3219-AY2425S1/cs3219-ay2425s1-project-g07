@@ -116,12 +116,12 @@ export class MatchingWebSocketService implements OnModuleInit {
 
   private async handleMatchMessage(messageBody: MatchMessage) {
     // Create a collab room for the matched users
-    const [difficulty, topic] = messageBody.matchedTopic.split('-');
-    try {
-      await this.createCollabRoom(messageBody.matchedRoom, topic, difficulty);
-    } catch (e) {
-      console.error(`Failed to create collab room: ${e}`);
-    }
+    // const [difficulty, topic] = messageBody.matchedTopic.split('-');
+    // try {
+    //   await this.createCollabRoom(messageBody.matchedRoom, topic, difficulty);
+    // } catch (e) {
+    //   console.error(`Failed to create collab room: ${e}`);
+    // }
     // Notify both users of match using userID to socket mapping
     if (messageBody.userId1 in this.userSocketMap) {
       const res = this.userSocketMap[messageBody.userId1];
@@ -238,19 +238,5 @@ export class MatchingWebSocketService implements OnModuleInit {
 
   private removeUserFromMatch(userId: string) {
     this.redisClient.del(userId);
-  }
-
-  private async createCollabRoom(roomId: string, topic: string, difficulty: string) {
-    try {
-      const collabServiceUrl = this.configService.get<string>('config.collabServiceDomain');
-      const response = await axios.post(`${collabServiceUrl}/create-room`, {
-        roomId: roomId,
-        topic: topic,
-        difficulty: difficulty
-      })
-      return response.data;
-    } catch (e) {
-      throw new Error(e);
-    }
   }
 }
