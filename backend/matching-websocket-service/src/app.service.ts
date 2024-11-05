@@ -2,7 +2,6 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Consumer, Kafka, Producer } from 'kafkajs';
 import { createClient, RedisClientType } from 'redis';
-import axios from 'axios';
 import {
   MatchFoundResponse,
   MatchRequest,

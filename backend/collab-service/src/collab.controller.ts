@@ -1,4 +1,10 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Get,
+    Param,
+    Post,
+} from '@nestjs/common';
 import { CollabService } from './services/collab.service';
 
 @Controller()
@@ -11,9 +17,9 @@ export class CollabController {
         return this.collabService.getAllRooms();
     }
 
-    @Get('rooms/:id')
-    async getRoomById(@Param('id') id: string) {
-        return this.collabService.getRoom(id);
+    @Post('rooms/:id')
+    async getRoomById(@Param('id') id: string, @Body() userId: { userId: string }) {
+        return this.collabService.getRoom(id, userId.userId);
     }
 
 }

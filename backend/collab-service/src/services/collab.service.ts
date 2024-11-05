@@ -101,7 +101,7 @@ export class CollabService implements OnModuleInit {
   joinRoom(roomId: string, userId: string): RoomResponse | null {
     const room = this.rooms.get(roomId);
     
-    if (!room || room.users.size >= 2 || (room.user1 !== userId && room.user2 !== userId)) {
+    if (!this.isValidRoomForUser(room, userId)) {
       return null;
     }
 
@@ -154,8 +154,14 @@ export class CollabService implements OnModuleInit {
       }));
   }
 
-  getRoom(roomId: string): RoomResponse | null {
+  getRoom(roomId: string, userId: string): RoomResponse | null {
     const room = this.rooms.get(roomId);
+
+    if (!this.isValidRoomForUser(room, userId)) {
+      console.log("Invalid room", room.id, "for", userId)
+      return null;
+    }
+
     return room ? 
         {
             id: room.id,
@@ -163,6 +169,10 @@ export class CollabService implements OnModuleInit {
             question: room.question,
             doc: room.doc.guid
         } : null;
+  }
+
+  isValidRoomForUser(room: Room, userId: string): boolean {
+    return room && room.users.size < 2 && (room.user1 === userId || room.user2 === userId);
   }
 
   getRoomByClient(userId: string): RoomResponse | null {
