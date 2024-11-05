@@ -6,7 +6,7 @@ import * as monaco from 'monaco-editor';
 import { WebsocketProvider } from 'y-websocket';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
-import { Button, Flex, Text, Textarea, Spinner } from '@chakra-ui/react';
+import { Button, Flex, Text, Textarea, Spinner, Select } from '@chakra-ui/react';
 
 interface User {
   id: string;
@@ -18,9 +18,24 @@ interface AwarenessUser {
   isConnected: boolean;
   cursor: monaco.Position;
   selection: monaco.Selection | null;
+  language: string;
 }
 
 const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4'];
+
+const languages = new Map<string, string>([
+  ['javascript', 'JavaScript'],
+  ['typescript', 'TypeScript'],
+  ['python', 'Python'],
+  ['java', 'Java'],
+  ['csharp', 'C#'],
+  ['c', 'C'],
+  ['cpp', 'C++'],
+  ['go', 'Go'],
+  ['ruby', 'Ruby'],
+  ['php', 'PHP'],
+  ['rust', 'Rust']
+]);
 
 self.MonacoEnvironment = {
   getWorkerUrl: function (moduleId, label) {
@@ -61,6 +76,18 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   const [connectedUsers, setConnectedUsers] = useState<AwarenessUser[]>([]);
   const cursorsRef = useRef<Map<string, string[]>>(new Map());
   const [codeOutput, setCodeOutput] = useState<string>('');
+  const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('currentLanguage') || 'javascript';
+    }
+    return 'javascript';
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentLanguage', currentLanguage);
+    }
+  }, [currentLanguage]);
 
   const currentUser = useMemo(() => ({
     id: userId,
@@ -254,17 +281,30 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
     }
   };
 
+  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCurrentLanguage(e.target.value);
+  }
+
   return (
     connectedToRoom ? (
       <Flex direction="column" className='h-full'>
-        <Text fontSize="sm" fontFamily={'monospace'} padding="10px" backgroundColor="#f5f5f5" borderColor="gray.200">
-          JavaScript
-        </Text>
+        <Flex direction="row" background='#f5f5f5'>
+          <Select
+            margin={2}
+            flex="0 0 20%"
+            value={currentLanguage}
+            onChange={handleLanguageChange}
+          >
+            {Array.from(languages).map(([key, value]) => (
+              <option key={key} value={key}>{value}</option>
+            ))}
+          </Select>
+        </Flex>
         <Editor
           height="100%"
           defaultValue="// some comment"
           theme='vs-dark'
-          defaultLanguage="javascript"
+          language={currentLanguage}
           onMount={setEditor}
           options={{
             minimap: { enabled: false },
