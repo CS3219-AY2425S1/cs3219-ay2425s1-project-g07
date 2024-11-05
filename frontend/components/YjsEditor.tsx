@@ -6,7 +6,7 @@ import * as monaco from 'monaco-editor';
 import { WebsocketProvider } from 'y-websocket';
 import { MonacoBinding } from 'y-monaco';
 import Editor from '@monaco-editor/react';
-import { Button, Flex, Text, Textarea, Spinner, Select } from '@chakra-ui/react';
+import { Button, Flex, Text, Textarea, Spinner, Select, useToast } from '@chakra-ui/react';
 
 interface User {
   id: string;
@@ -18,7 +18,7 @@ interface AwarenessUser {
   isConnected: boolean;
   cursor: monaco.Position;
   selection: monaco.Selection | null;
-  language: string;
+  language: [string, number]; // [language, timestamp]
 }
 
 const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4'];
@@ -68,6 +68,7 @@ interface IProps {
 const collabDomain = process.env.NEXT_PUBLIC_COLLAB_SERVICE_DOMAIN || 'http://localhost:8007';
 
 const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
+  const toast = useToast();
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [connectedToRoom, setConnectedToRoom] = useState(false);
   const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
@@ -76,18 +77,6 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   const [connectedUsers, setConnectedUsers] = useState<AwarenessUser[]>([]);
   const cursorsRef = useRef<Map<string, string[]>>(new Map());
   const [codeOutput, setCodeOutput] = useState<string>('');
-  const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('currentLanguage') || 'javascript';
-    }
-    return 'javascript';
-  });
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('currentLanguage', currentLanguage);
-    }
-  }, [currentLanguage]);
 
   const currentUser = useMemo(() => ({
     id: userId,
@@ -96,7 +85,7 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
 
   useEffect(() => {
     const provider = new WebsocketProvider(
-      `${collabDomain.replace('http','ws')}/code`,
+      `${collabDomain.replace('http', 'ws')}/code`,
       roomId,
       ydoc,
       { maxBackoffTime: 4000, params: { userId } }
@@ -281,24 +270,68 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
     }
   };
 
+  const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
+    const initialLanguage = provider?.awareness.getLocalState()?.language[0] || 'javascript';
+    return initialLanguage;
+  });
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCurrentLanguage(e.target.value);
-  }
+    const newLanguage = e.target.value;
+    setCurrentLanguage(newLanguage);
+    if (provider) {
+      provider.awareness.setLocalStateField('language', [newLanguage, Date.now()]);
+    }
+  };
+
+  useEffect(() => {
+    if (!provider) return;
+
+    const handleAwarenessChange = () => {
+      const states = Array.from(provider.awareness.getStates().values());
+      const currentUserLanguageState = states.find((state: any) => state.user.id === currentUser.id)?.language;
+      const otherUserLanguageState = states.find((state: any) => state.user.id !== currentUser.id)?.language;
+      const latestLanguageState = 
+        otherUserLanguageState && (!currentUserLanguageState || otherUserLanguageState[1] > currentUserLanguageState[1])
+          ? otherUserLanguageState
+          : currentUserLanguageState;
+
+      if (latestLanguageState && latestLanguageState !== currentUserLanguageState) {
+        if (!toast.isActive('language-change-toast')) {
+          toast({
+            id: 'language-change-toast',
+            title: "Language changed",
+            description: `The language has been changed to ${languages.get(latestLanguageState[0])}`,
+            status: "info",
+            duration: 2000,
+            isClosable: true,
+            position: "top"
+          });
+        }
+        setCurrentLanguage(latestLanguageState[0]);
+      }
+    };
+
+    provider.awareness.on('change', handleAwarenessChange);
+    handleAwarenessChange();
+
+    return () => {
+      provider.awareness.off('change', handleAwarenessChange);
+    };
+  }, [provider, currentUser, currentLanguage, toast]);
 
   return (
     connectedToRoom ? (
       <Flex direction="column" className='h-full'>
         <Flex direction="row" background='#f5f5f5'>
-          <Select
+            <Select
             margin={2}
-            flex="0 0 20%"
             value={currentLanguage}
             onChange={handleLanguageChange}
-          >
+            >
             {Array.from(languages).map(([key, value]) => (
               <option key={key} value={key}>{value}</option>
             ))}
-          </Select>
+            </Select>
         </Flex>
         <Editor
           height="100%"
@@ -315,7 +348,7 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
           flex="0 0 20%"
           fontFamily={'monospace'}
           backgroundColor="#f5f5f5"
-          placeholder='Your code output will be shown here.'
+          placeholder={`Your code output will be shown here.\nOnly JavaScript code can be run.`}
           value={codeOutput}
           readOnly
         />
