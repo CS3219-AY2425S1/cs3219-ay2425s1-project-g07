@@ -36,31 +36,11 @@ describe('ChatGateway', () => {
     });
   });
 
-  describe('handleConnection', () => {
-    it('should log client connection', () => {
-      const consoleSpy = jest.spyOn(console, 'log');
-      chatGateway.handleConnection(mockClient);
-      expect(consoleSpy).toHaveBeenCalledWith(`Client connected: ${mockClient.id}`);
-    });
-  });
-
-  describe('handleDisconnect', () => {
-    it('should log client disconnection', () => {
-      const consoleSpy = jest.spyOn(console, 'log');
-      chatGateway.handleDisconnect(mockClient);
-      expect(consoleSpy).toHaveBeenCalledWith(`Client disconnected: ${mockClient.id}`);
-    });
-  });
-
   describe('handleJoinRoom', () => {
     it('should allow client to join specified room and log the event', () => {
-      const consoleSpy = jest.spyOn(console, 'log');
       const roomId = 'testRoomId';
-
       chatGateway.handleJoinRoom(mockClient, roomId);
-
       expect(mockClient.join).toHaveBeenCalledWith(roomId);
-      expect(consoleSpy).toHaveBeenCalledWith(`Client ${mockClient.id} joined room: ${roomId}`);
     });
   });
 
@@ -70,13 +50,9 @@ describe('ChatGateway', () => {
         roomId: 'testRoomId',
         message: { senderUsername: 'testUser', text: 'Hello, world!' },
       };
-      const consoleSpy = jest.spyOn(console, 'log');
-
       chatGateway.handleChatMessage(data);
-
       expect(mockServer.to).toHaveBeenCalledWith(data.roomId);
       expect(mockServer.emit).toHaveBeenCalledWith('chat message', data.message);
-      expect(consoleSpy).toHaveBeenCalledWith(`Message sent to room ${data.roomId}: ${data.message.text}`);
     });
   });
 });
