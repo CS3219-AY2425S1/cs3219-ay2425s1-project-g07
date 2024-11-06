@@ -191,8 +191,6 @@ export class MatchingService implements OnModuleInit {
       const requesterUserId = matchRequest.userId;
       const currTime = Date.now();
 
-      // TODO Duplicate check handled by Redis
-
       console.log(`Received match request: ${matchRequest} on topic: ${kafkaTopic}`);
 
       // Check if a matching user exists in the Queue

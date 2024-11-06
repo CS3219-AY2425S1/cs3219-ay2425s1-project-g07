@@ -209,7 +209,7 @@ export default function MatchingPage() {
   };
 
   const onClickGoToRoom = () => {
-    getRoom(roomId).then((room) => {
+    getRoom(roomId, username).then((room) => {
       const questionId = room.question._id;
 
       if (matchedWithUser === undefined) {
@@ -267,7 +267,7 @@ export default function MatchingPage() {
     // Verify that room exists
     setTimeout(async () => {
       try {
-        const room = await getRoom(roomId);
+        await getRoom(roomId, username);
       } catch (error) {
         console.error("Error getting room:", error);
         return;
