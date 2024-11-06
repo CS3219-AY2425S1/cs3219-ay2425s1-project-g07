@@ -7,10 +7,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   QuestionHistory,
   QuestionHistoryDocument,
+  AttemptHistory,
+  AttemptHistoryDocument,
 } from '../schemas/history.schema';
 import {
   CreateQuestionHistoryDto,
   UpdateQuestionHistoryDto,
+  CreateAttemptHistoryDto,
+  UpdateAttemptHistoryDto,
 } from 'src/dto/history.dto';
 import { Model } from 'mongoose';
 
@@ -72,5 +76,76 @@ export class QuestionHistoryService {
 
   async remove(id: string): Promise<QuestionHistory> {
     return this.questionHistoryModel.findByIdAndDelete(id).exec();
+  }
+}
+
+@Injectable()
+export class AttemptHistoryService {
+  constructor(
+    @InjectModel(AttemptHistory.name)
+    private attemptHistoryModel: Model<AttemptHistoryDocument>,
+  ) {}
+
+  async create(
+    createAttemptHistoryDto: CreateAttemptHistoryDto,
+  ): Promise<AttemptHistory> {
+    const createdAttemptHistory = new this.attemptHistoryModel(
+      createAttemptHistoryDto,
+    );
+    try {
+      return await createdAttemptHistory.save();
+    } catch (error) {
+      console.error('Error creating attempt history:', error);
+      throw error;
+    }
+  }
+
+  async findAll(): Promise<AttemptHistory[]> {
+    return this.attemptHistoryModel.find().exec();
+  }
+
+  async findAllByStudentId(studentId: string): Promise<AttemptHistory[]> {
+    return this.attemptHistoryModel.find({ studentId }).exec();
+  }
+
+  async findOne(id: string): Promise<AttemptHistory> {
+    const attemptHistory = await this.attemptHistoryModel.findById(id).exec();
+    if (!attemptHistory) {
+      throw new NotFoundException(`AttemptHistory with ID ${id} not found`);
+    }
+    return attemptHistory;
+  }
+
+  async update(
+    id: string,
+    updateAttemptHistoryDto: UpdateAttemptHistoryDto,
+  ): Promise<AttemptHistory> {
+    return this.attemptHistoryModel
+      .findByIdAndUpdate(id, updateAttemptHistoryDto, { new: true })
+      .exec();
+  }
+
+  async remove(id: string): Promise<AttemptHistory> {
+    return this.attemptHistoryModel.findByIdAndDelete(id).exec();
+  }
+
+  async findAllByStudentIdAndRoomId(
+    studentId: string,
+    roomId: string,
+  ): Promise<AttemptHistory[]> {
+    return this.attemptHistoryModel
+      .find({ studentId, roomId })
+      .sort({ timeAttempted: -1 })
+      .exec();
+  }
+
+  async findAllByStudentIdAndQuestionId(
+    studentId: string,
+    questionId: string,
+  ): Promise<AttemptHistory[]> {
+    return this.attemptHistoryModel
+      .find({ studentId, questionId })
+      .sort({ timeAttempted: -1 })
+      .exec();
   }
 }

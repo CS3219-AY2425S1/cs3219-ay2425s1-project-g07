@@ -5,10 +5,18 @@ import { AppService } from './app.service';
 import {
   QuestionHistory,
   QuestionHistorySchema,
+  AttemptHistory,
+  AttemptHistorySchema,
 } from './schemas/history.schema';
 
-import { QuestionHistoryController } from './controllers/history.controller';
-import { QuestionHistoryService } from './services/history.services';
+import {
+  AttemptHistoryController,
+  QuestionHistoryController,
+} from './controllers/history.controller';
+import {
+  AttemptHistoryService,
+  QuestionHistoryService,
+} from './services/history.services';
 
 const connection_uri = process.env.HISTORY_SERVICE_MONGODB_URI;
 
@@ -26,9 +34,17 @@ if (!connection_uri) {
         name: QuestionHistory.name,
         schema: QuestionHistorySchema,
       },
+      {
+        name: AttemptHistory.name,
+        schema: AttemptHistorySchema,
+      },
     ]),
   ],
-  controllers: [AppController, QuestionHistoryController],
-  providers: [AppService, QuestionHistoryService],
+  controllers: [
+    AppController,
+    QuestionHistoryController,
+    AttemptHistoryController,
+  ],
+  providers: [AppService, QuestionHistoryService, AttemptHistoryService],
 })
 export class AppModule {}
