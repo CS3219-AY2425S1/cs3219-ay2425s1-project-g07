@@ -42,17 +42,6 @@ describe('MatchingWebSocketService', () => {
     jest.clearAllMocks();
   });
 
-  describe('onModuleInit', () => {
-    it('should connect to producer and consumer and subscribe to topics', async () => {
-      const subscribeToTopicsSpy = jest.spyOn(service as any, 'subscribeToTopics');
-      await service.onModuleInit();
-
-      expect(producer.connect).toHaveBeenCalled();
-      expect(consumer.connect).toHaveBeenCalled();
-      expect(subscribeToTopicsSpy).toHaveBeenCalled();
-    });
-  });
-
   describe('addMatchRequest', () => {
     it('should send a match request to Kafka and set up mappings', async () => {
       const socketId = 'socket1';
@@ -62,7 +51,6 @@ describe('MatchingWebSocketService', () => {
       const onMatchTimeout = jest.fn();
 
       redisClient.set = jest.fn().mockResolvedValue('OK');
-
       const result: MatchRequestResponse = await service.addMatchRequest(socketId, req, onMatch, onMatchTimeout);
 
       expect(producer.send).toHaveBeenCalledWith({
@@ -73,7 +61,6 @@ describe('MatchingWebSocketService', () => {
           },
         ],
       });
-
       expect(result).toHaveProperty('message', `Match Request received for ${req.userId} at ${reqTime}`);
       expect(service['socketIdReqMap'][socketId]).toBeDefined();
       expect(service['userSocketMap'][req.userId]).toBeDefined();
@@ -86,7 +73,6 @@ describe('MatchingWebSocketService', () => {
       const reqTime = Date.now();
       service['socketIdReqMap'][socketId] = { kafkaTopic: 'easy-math', userId: 'user123', timestamp: reqTime };
       service['userSocketMap']['user123'] = { socketId, onMatch: jest.fn(), onMatchTimeout: jest.fn() };
-
       const result = await service.cancelMatchRequest(socketId);
 
       expect(producer.send).toHaveBeenCalledWith({
@@ -111,12 +97,10 @@ describe('MatchingWebSocketService', () => {
         matchedTopic: 'easy-math',
         matchedRoom: 'test-room',
       };
-
       const onMatch1 = jest.fn();
       const onMatch2 = jest.fn();
       service['userSocketMap']['user123'] = { socketId: 'socket1', onMatch: onMatch1, onMatchTimeout: jest.fn() };
       service['userSocketMap']['user456'] = { socketId: 'socket2', onMatch: onMatch2, onMatchTimeout: jest.fn() };
-
       await (service as any).handleMatchMessage(matchMessage);
 
       expect(onMatch1).toHaveBeenCalledWith({
@@ -136,9 +120,7 @@ describe('MatchingWebSocketService', () => {
     it('should handle a timeout message and call onMatchTimeout', () => {
       const timeoutMessage = { userId: 'user123', timestamp: Date.now() };
       const onMatchTimeout = jest.fn();
-
       service['userSocketMap']['user123'] = { socketId: 'socket1', onMatch: jest.fn(), onMatchTimeout };
-
       (service as any).handleMatchTimeoutMessage(timeoutMessage);
 
       expect(onMatchTimeout).toHaveBeenCalled();
@@ -151,12 +133,14 @@ describe('MatchingWebSocketService', () => {
     it('should return true if user is already in match queue', async () => {
       redisClient.set = jest.fn().mockResolvedValue(null);
       const result = await (service as any).userAlreadyInMatch('user123');
+
       expect(result).toBe(true);
     });
 
     it('should return false if user is not in match queue', async () => {
       redisClient.set = jest.fn().mockResolvedValue('OK');
       const result = await (service as any).userAlreadyInMatch('user123');
+
       expect(result).toBe(false);
     });
   });

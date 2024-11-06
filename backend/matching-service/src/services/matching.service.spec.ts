@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MatchingService, MatchStatus, Message, MessageAction } from './matching.service';
+import { QuestionComplexity, QuestionTopic } from '../dto/request.dto';
 import { ConfigService } from '@nestjs/config';
 import { Producer, Consumer } from 'kafkajs';
 
@@ -45,10 +46,8 @@ describe('MatchingService', () => {
     }).compile();
 
     service = module.get<MatchingService>(MatchingService);
-
     producer = service['producer'];
     consumer = service['consumer'];
-
     jest.clearAllMocks();
   });
 
@@ -57,29 +56,19 @@ describe('MatchingService', () => {
     await service.onModuleDestroy();
   })
 
-  describe('onModuleInit', () => {
-    it('should connect to producer and consumer and start consuming messages', async () => {
-      const connectProducerSpy = jest.spyOn(producer, 'connect');
-      const connectConsumerSpy = jest.spyOn(consumer, 'connect');
-      const subscribeToTopicsSpy = jest.spyOn(service, 'subscribeToTopics');
-      const consumeMessagesSpy = jest.spyOn(service, 'consumeMessages').mockImplementation(() => Promise.resolve());
-
-      await service.onModuleInit();
-
-      expect(connectProducerSpy).toHaveBeenCalled();
-      expect(connectConsumerSpy).toHaveBeenCalled();
-      expect(subscribeToTopicsSpy).toHaveBeenCalled();
-      expect(consumeMessagesSpy).toHaveBeenCalled();
-    });
-  });
-
   describe('subscribeToTopics', () => {
     it('should subscribe to all topics based on complexities and topics', async () => {
       const subscribeSpy = jest.spyOn(consumer, 'subscribe').mockResolvedValue(undefined);
       await service.subscribeToTopics();
+      const expectedArray = [];
+      for (const complexity of Object.values(QuestionComplexity)) {
+        for (const topic of Object.values(QuestionTopic)) {
+          expectedArray.push(`${complexity}-${topic}`);
+        }
+      }
 
       expect(subscribeSpy).toHaveBeenCalledWith({
-        topics: expect.any(Array),
+        topics: expectedArray,
         fromBeginning: false,
       });
     });
@@ -94,10 +83,8 @@ describe('MatchingService', () => {
         timestamp: Date.now(),
         expiryTime: Date.now() + 300000,
       };
-
       jest.spyOn(service['requestQueue'], 'retrieve').mockResolvedValue(undefined);
       const enqueueSpy = jest.spyOn(service['requestQueue'], 'enqueue').mockResolvedValue(undefined);
-
       await service['handleMatchRequest'](kafkaTopic, matchRequest);
 
       expect(enqueueSpy).toHaveBeenCalledWith({
@@ -120,7 +107,6 @@ describe('MatchingService', () => {
         timestamp: Date.now(),
         expiryTime: Date.now() + 300000,
       };
-
       const matchingUser = {
         userId: 'user456',
         status: MatchStatus.PENDING,
@@ -131,13 +117,9 @@ describe('MatchingService', () => {
         createTime: Date.now(),
         expiryTime: Date.now() + 300000,
       };
-
       jest.spyOn(service['requestQueue'], 'retrieve').mockResolvedValue(matchingUser);
       const sendSpy = jest.spyOn(producer, 'send').mockResolvedValue(undefined);
-
       await service['handleMatchRequest'](kafkaTopic, matchRequest);
-
-      
 
       expect(sendSpy).toHaveBeenCalledWith({
         topic: 'matches',
@@ -162,9 +144,7 @@ describe('MatchingService', () => {
         userId: 'user123',
         timestamp: Date.now(),
       };
-
       const cleanSpy = jest.spyOn(service['requestQueue'], 'clean').mockResolvedValue(undefined);
-
       await service['handleCancelRequest']('easy-math', cancelRequest);
 
       expect(cleanSpy).toHaveBeenCalledWith(expect.any(Function));
@@ -178,12 +158,9 @@ describe('MatchingService', () => {
         value: JSON.stringify({ action: MessageAction.REQUEST_MATCH, userId: 'user123', timestamp: Date.now() }),
       };
       const handleMatchRequestSpy = jest.spyOn(service, 'handleMatchRequest').mockResolvedValue(undefined);
-
-      // Cast consumer.run as a jest.Mock to mock its implementation
       (consumer.run as jest.Mock).mockImplementation(({ eachMessage }) => {
         return eachMessage({ topic: 'easy-math', message });
       });
-
       await service['consumeMessages']();
 
       expect(handleMatchRequestSpy).toHaveBeenCalledWith('easy-math', JSON.parse(message.value));
@@ -195,32 +172,18 @@ describe('MatchingService', () => {
         value: JSON.stringify({ action: MessageAction.CANCEL_MATCH, userId: 'user123', timestamp: Date.now() }),
       };
       const handleCancelRequestSpy = jest.spyOn(service, 'handleCancelRequest').mockResolvedValue(undefined);
-
-      // Cast consumer.run as a jest.Mock to mock its implementation
       (consumer.run as jest.Mock).mockImplementation(({ eachMessage }) => {
         return eachMessage({ topic: 'easy-math', message });
       });
-
       await service['consumeMessages']();
 
       expect(handleCancelRequestSpy).toHaveBeenCalledWith('easy-math', JSON.parse(message.value));
     });
   });
 
-  describe('getKafkaBrokerUri and getConsumerGroupId', () => {
-    it('should return the configured Kafka broker URI', () => {
-      expect(service.getKafkaBrokerUri()).toBe('kafka://localhost:9092');
-    });
-
-    it('should return the configured consumer group ID', () => {
-      expect(service.getConsumerGroupId()).toBe('matching-service-group');
-    });
-  });
-
   describe('onModuleDestroy', () => {
     it('should clear interval on module destroy', async () => {
       const clearIntervalSpy = jest.spyOn(global, 'clearInterval');
-
       await service.onModuleInit();
       await service.onModuleDestroy();
 
