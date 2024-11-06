@@ -46,3 +46,26 @@ export const addAttemptHistory = async (attempt: AttemptHistory) => {
     throw error;
   }
 };
+
+export const getAttemptHistoryForSession = async (
+  studentId: string,
+  roomId: string
+) => {
+  try {
+    console.log("Student ID:", studentId);
+    console.log("Room ID:", roomId);
+    const response = await axiosInstance.get(
+      `/history/attempts/student/${studentId}/room/${roomId}`
+    );
+
+    const attemptHistory = response.data.map((item: any) => ({
+      ...item,
+      timeAttempted: new Date(item.timeAttempted),
+    }));
+
+    return attemptHistory as AttemptHistory[];
+  } catch (error) {
+    console.error("Error getting history:", error);
+    throw error;
+  }
+};
