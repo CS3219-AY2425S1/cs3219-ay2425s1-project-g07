@@ -35,12 +35,10 @@ describe('GatewayService', () => {
 
   it('should redirect request by using service domain/test-path, remove /api', async () => {
     const serviceDomain = 'http://peerprep.com';
-
     (axios as jest.MockedFunction<typeof axios>).mockResolvedValue({
       status: 200,
       data: { message: 'success' },
     });
-
     await gatewayService.handleRedirectRequest(mockReq as Request, mockRes as Response, serviceDomain);
 
     expect(axios).toHaveBeenCalledWith({
@@ -54,16 +52,13 @@ describe('GatewayService', () => {
   });
 
   it('should handle an error when the request fails, propagate error through', async () => {
-    // Arrange
     const serviceDomain = 'http://peerprep.com';
-
     (axios as jest.MockedFunction<typeof axios>).mockRejectedValue({
       response: {
         status: 503,
         data: { message: 'Service Unavailable' },
       },
     });
-
     await gatewayService.handleRedirectRequest(mockReq as Request, mockRes as Response, serviceDomain);
 
     expect(mockRes.status).toHaveBeenCalledWith(503);
@@ -75,7 +70,6 @@ describe('GatewayService', () => {
       'x-custom-header': 'test-value',
       'another-header': 'another-value',
     };
-
     const result = gatewayService.getHeaders(headers);
 
     expect(result).toEqual({
