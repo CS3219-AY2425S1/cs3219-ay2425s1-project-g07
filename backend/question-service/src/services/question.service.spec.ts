@@ -40,7 +40,6 @@ describe('QuestionService', () => {
     }).compile();
 
     service = module.get<QuestionService>(QuestionService);
-
     jest.clearAllMocks();
   });
 
@@ -161,7 +160,6 @@ describe('QuestionService', () => {
   describe('findOne', () => {
     it('should return a question by ID', async () => {
       mockQuestionModel.exec = jest.fn().mockResolvedValue(mockQuestion);
-
       const result = await service.findOne(mockQuestion._id);
 
       expect(result).toEqual(mockQuestion);
@@ -178,7 +176,6 @@ describe('QuestionService', () => {
   describe('delete', () => {
     it('should delete a question by ID', async () => {
       mockQuestionModel.exec = jest.fn().mockResolvedValue(mockQuestion);
-
       const result = await service.delete(mockQuestion._id);
 
       expect(result).toEqual(mockQuestion);
@@ -197,7 +194,6 @@ describe('QuestionService', () => {
       const filterQuestionsDto: FilterQuestionsDto = { difficulty: QuestionComplexity.EASY, topics: [QuestionTopic.BINARY] };
       const filter = { complexity: QuestionComplexity.EASY, topics: { $in: [QuestionTopic.BINARY] } };
       mockQuestionModel.exec = jest.fn().mockResolvedValue([mockQuestion]);
-
       const result = await service.filterQuestions(filterQuestionsDto);
 
       expect(result).toEqual([mockQuestion]);
@@ -210,7 +206,6 @@ describe('QuestionService', () => {
       const filterQuestionsDto: FilterQuestionsDto = { difficulty: QuestionComplexity.EASY, topics: [QuestionTopic.BINARY] };
       const filter = { complexity: QuestionComplexity.EASY, topics: { $in: [QuestionTopic.BINARY] } };
       mockQuestionModel.exec = jest.fn().mockResolvedValue([mockQuestion]);
-
       const result = await service.getRandomQuestion(filterQuestionsDto);
 
       expect(result).toEqual(mockQuestion);

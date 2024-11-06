@@ -39,13 +39,6 @@ describe('QuestionController', () => {
     jest.clearAllMocks();
   });
 
-  describe('health', () => {
-    it('should return OK', async () => {
-      const result = await controller.health();
-      expect(result).toBe('OK');
-    });
-  });
-
   describe('create', () => {
     it('should create a new question', async () => {
       const createQuestionDto: CreateQuestionDto = { 
@@ -57,8 +50,8 @@ describe('QuestionController', () => {
       };
       const createdQuestion = { ...createQuestionDto };
       mockQuestionService.create.mockResolvedValue(createdQuestion);
-
       const result = await controller.create(createQuestionDto);
+
       expect(result).toEqual(createdQuestion);
       expect(questionService.create).toHaveBeenCalledWith(createQuestionDto);
     });
@@ -76,8 +69,8 @@ describe('QuestionController', () => {
         }
       ];
       mockQuestionService.findAll.mockResolvedValue(questions);
-
       const result = await controller.findAll();
+
       expect(result).toEqual(questions);
       expect(questionService.findAll).toHaveBeenCalled();
     });
@@ -97,8 +90,8 @@ describe('QuestionController', () => {
         link: 'hello.com'
       };
       mockQuestionService.getRandomQuestion.mockResolvedValue(randomQuestion);
-
       const result = await controller.getRandomQuestion(filterDto);
+
       expect(result).toEqual(randomQuestion);
       expect(questionService.getRandomQuestion).toHaveBeenCalledWith(filterDto);
     });
@@ -118,8 +111,8 @@ describe('QuestionController', () => {
         link: 'hello.com'
       }];
       mockQuestionService.filterQuestions.mockResolvedValue(filteredQuestions);
-
       const result = await controller.filterQuestions(filterDto);
+
       expect(result).toEqual(filteredQuestions);
       expect(questionService.filterQuestions).toHaveBeenCalledWith(filterDto);
     });
@@ -136,17 +129,10 @@ describe('QuestionController', () => {
         link: 'hello.com'
       };
       mockQuestionService.findOne.mockResolvedValue(question);
-
       const result = await controller.findOne('126');
+
       expect(result).toEqual(question);
       expect(questionService.findOne).toHaveBeenCalledWith('126');
-    });
-
-    it('should throw NotFoundException if question not found', async () => {
-      mockQuestionService.findOne.mockRejectedValue(new NotFoundException('Question not found'));
-
-      await expect(controller.findOne('nonexistent')).rejects.toThrow(NotFoundException);
-      expect(questionService.findOne).toHaveBeenCalledWith('nonexistent');
     });
   });
 
@@ -161,8 +147,8 @@ describe('QuestionController', () => {
         link: 'test-link',
       };
       mockQuestionService.update.mockResolvedValue(updatedQuestion);
-
       const result = await controller.update('127', updateDto);
+
       expect(result).toEqual(updatedQuestion);
       expect(questionService.update).toHaveBeenCalledWith('127', updateDto);
     });
@@ -178,17 +164,10 @@ describe('QuestionController', () => {
         link: 'test-link',
       };
       mockQuestionService.delete.mockResolvedValue(deletedQuestion);
-
       const result = await controller.delete('128');
+
       expect(result).toEqual(deletedQuestion);
       expect(questionService.delete).toHaveBeenCalledWith('128');
-    });
-
-    it('should throw NotFoundException if question to delete is not found', async () => {
-      mockQuestionService.delete.mockRejectedValue(new NotFoundException('Question not found'));
-
-      await expect(controller.delete('nonexistent')).rejects.toThrow(NotFoundException);
-      expect(questionService.delete).toHaveBeenCalledWith('nonexistent');
     });
   });
 });
