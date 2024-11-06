@@ -1,12 +1,22 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState, useRef } from 'react';
-import * as Y from 'yjs';
-import * as monaco from 'monaco-editor';
-import { WebsocketProvider } from 'y-websocket';
-import { MonacoBinding } from 'y-monaco';
-import Editor from '@monaco-editor/react';
-import { Button, Flex, Text, Textarea, Spinner, Select, useToast } from '@chakra-ui/react';
+import React, { useEffect, useMemo, useState, useRef, use } from "react";
+import * as Y from "yjs";
+import * as monaco from "monaco-editor";
+import { WebsocketProvider } from "y-websocket";
+import { MonacoBinding } from "y-monaco";
+import Editor from "@monaco-editor/react";
+import {
+  Button,
+  Flex,
+  Text,
+  Textarea,
+  Spinner,
+  Select,
+  useToast,
+} from "@chakra-ui/react";
+import { AttemptHistory } from "@/types/History";
+import { addAttemptHistory } from "@/services/historyService";
 
 interface User {
   id: string;
@@ -21,123 +31,149 @@ interface AwarenessUser {
   language: [string, number]; // [language, timestamp]
 }
 
-const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4'];
+const colors = [
+  "#f44336",
+  "#e91e63",
+  "#9c27b0",
+  "#673ab7",
+  "#3f51b5",
+  "#2196f3",
+  "#03a9f4",
+  "#00bcd4",
+];
 
 const languages = new Map<string, string>([
-  ['javascript', 'JavaScript'],
-  ['typescript', 'TypeScript'],
-  ['python', 'Python'],
-  ['java', 'Java'],
-  ['csharp', 'C#'],
-  ['c', 'C'],
-  ['cpp', 'C++'],
-  ['go', 'Go'],
-  ['ruby', 'Ruby'],
-  ['php', 'PHP'],
-  ['rust', 'Rust']
+  ["javascript", "JavaScript"],
+  ["typescript", "TypeScript"],
+  ["python", "Python"],
+  ["java", "Java"],
+  ["csharp", "C#"],
+  ["c", "C"],
+  ["cpp", "C++"],
+  ["go", "Go"],
+  ["ruby", "Ruby"],
+  ["php", "PHP"],
+  ["rust", "Rust"],
 ]);
 
 self.MonacoEnvironment = {
   getWorkerUrl: function (moduleId, label) {
     switch (label) {
-      case 'json':
-        return '_next/static/json.worker.js';
-      case 'css':
-      case 'scss':
-      case 'less':
-        return '_next/static/css.worker.js';
-      case 'html':
-      case 'handlebars':
-      case 'razor':
-        return '_next/static/html.worker.js';
-      case 'typescript':
-      case 'javascript':
-        return '_next/static/ts.worker.js';
+      case "json":
+        return "_next/static/json.worker.js";
+      case "css":
+      case "scss":
+      case "less":
+        return "_next/static/css.worker.js";
+      case "html":
+      case "handlebars":
+      case "razor":
+        return "_next/static/html.worker.js";
+      case "typescript":
+      case "javascript":
+        return "_next/static/ts.worker.js";
       default:
-        return '_next/static/editor.worker.js';
+        return "_next/static/editor.worker.js";
     }
-  }
+  },
 };
 
 interface IProps {
   userId: string;
   roomId: string;
-  onConnectionChange?: (status: 'connected' | 'disconnected') => void;
+  questionId: string;
+  onConnectionChange?: (status: "connected" | "disconnected") => void;
 }
 
-const collabDomain = process.env.NEXT_PUBLIC_COLLAB_SERVICE_DOMAIN || 'http://localhost:8007';
+const collabDomain =
+  process.env.NEXT_PUBLIC_COLLAB_SERVICE_DOMAIN || "http://localhost:8007";
 
-const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
+const YjsEditor = ({
+  userId,
+  questionId,
+  roomId,
+  onConnectionChange,
+}: IProps) => {
   const toast = useToast();
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [connectedToRoom, setConnectedToRoom] = useState(false);
-  const [editor, setEditor] = useState<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const [editor, setEditor] =
+    useState<monaco.editor.IStandaloneCodeEditor | null>(null);
   const [provider, setProvider] = useState<WebsocketProvider | null>(null);
   const [binding, setBinding] = useState<MonacoBinding | null>(null);
   const [connectedUsers, setConnectedUsers] = useState<AwarenessUser[]>([]);
   const cursorsRef = useRef<Map<string, string[]>>(new Map());
-  const [codeOutput, setCodeOutput] = useState<string>('');
+  const [codeOutput, setCodeOutput] = useState<string>("");
+  const [currentAttempt, setCurrentAttempt] = useState<AttemptHistory | null>(
+    null
+  );
 
-  const currentUser = useMemo(() => ({
-    id: userId,
-    color: colors[Math.floor(Math.random() * colors.length)]
-  }), [userId]);
+  const currentUser = useMemo(
+    () => ({
+      id: userId,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    }),
+    [userId]
+  );
 
   useEffect(() => {
     const provider = new WebsocketProvider(
-      `${collabDomain.replace('http', 'ws')}/code`,
+      `${collabDomain.replace("http", "ws")}/code`,
       roomId,
       ydoc,
       { maxBackoffTime: 4000, params: { userId } }
     );
 
     setProvider(provider);
-    provider.awareness.setLocalStateField('user', currentUser);
-    provider.awareness.setLocalStateField('cursor', { lineNumber: 1, column: 1 });
+    provider.awareness.setLocalStateField("user", currentUser);
+    provider.awareness.setLocalStateField("cursor", {
+      lineNumber: 1,
+      column: 1,
+    });
 
     const handleConnection = () => {
       console.log("Connected to room: ", roomId);
       setConnectedToRoom(true);
-      onConnectionChange?.('connected');
+      onConnectionChange?.("connected");
     };
 
     const handleDisconnect = () => {
       console.log("Disconnected from room: ", roomId);
       setConnectedToRoom(false);
-      onConnectionChange?.('disconnected');
+      onConnectionChange?.("disconnected");
     };
 
     const handleConnectError = () => {
       console.log("Error connecting to room: ", roomId);
       setConnectedToRoom(false);
       provider.shouldConnect = false;
-      onConnectionChange?.('disconnected');
+      onConnectionChange?.("disconnected");
     };
 
-    provider.on('status', ({ status }: { status: string }) => {
+    provider.on("status", ({ status }: { status: string }) => {
       console.log("Connection status: ", status);
-      if (status === 'connected') {
+      if (status === "connected") {
         handleConnection();
       }
     });
 
-    provider.on('connection-error', handleConnectError);
+    provider.on("connection-error", handleConnectError);
 
     const handleAwarenessChange = () => {
       const states = Array.from(provider.awareness.getStates().values());
       const users = states.map((state: any) => ({
         user: state.user,
         isConnected: true,
-        ...state
+        ...state,
       }));
       setConnectedUsers(users);
     };
 
-    provider.awareness.on('change', handleAwarenessChange);
+    provider.awareness.on("change", handleAwarenessChange);
     handleAwarenessChange();
 
     return () => {
-      provider.awareness.off('change', handleAwarenessChange);
+      provider.awareness.off("change", handleAwarenessChange);
       provider.destroy();
       ydoc.destroy();
     };
@@ -149,18 +185,20 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
     const updateCursor = () => {
       const position = editor.getPosition();
       if (position) {
-        provider.awareness.setLocalStateField('cursor', {
+        provider.awareness.setLocalStateField("cursor", {
           lineNumber: position.lineNumber,
-          column: position.column
+          column: position.column,
         });
       }
-      provider.awareness.setLocalStateField('selection', editor.getSelection());
+      provider.awareness.setLocalStateField("selection", editor.getSelection());
     };
 
     updateCursor();
 
-    const cursorPositionDisposable = editor.onDidChangeCursorPosition(updateCursor);
-    const cursorSelectionDisposable = editor.onDidChangeCursorSelection(updateCursor);
+    const cursorPositionDisposable =
+      editor.onDidChangeCursorPosition(updateCursor);
+    const cursorSelectionDisposable =
+      editor.onDidChangeCursorSelection(updateCursor);
 
     const createCursorDecoration = (state: AwarenessUser) => ({
       range: new monaco.Range(
@@ -172,13 +210,14 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
       options: {
         className: `cursor-${state.user.id}`,
         hoverMessage: { value: `${state.user.id}` },
-        beforeContentClassName: 'remote-caret',
-        stickiness: monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
-      }
+        beforeContentClassName: "remote-caret",
+        stickiness:
+          monaco.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+      },
     });
 
     const addCursorStyle = (userId: string, color: string): void => {
-      const style = document.createElement('style');
+      const style = document.createElement("style");
       style.textContent = `
         .cursor-${userId} {
           background-color: ${color};
@@ -208,7 +247,9 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
           const cursorDecoration = createCursorDecoration(state);
           addCursorStyle(state.user.id, state.user.color);
           let decorations = cursorsRef.current.get(state.user.id) || [];
-          decorations = editor.deltaDecorations(decorations, [cursorDecoration]);
+          decorations = editor.deltaDecorations(decorations, [
+            cursorDecoration,
+          ]);
           cursorsRef.current.set(state.user.id, decorations);
         }
       });
@@ -221,13 +262,13 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
       });
     };
 
-    provider.awareness.on('change', handleAwarenessChange);
+    provider.awareness.on("change", handleAwarenessChange);
     handleAwarenessChange();
 
     return () => {
       cursorPositionDisposable.dispose();
       cursorSelectionDisposable.dispose();
-      provider.awareness.off('change', handleAwarenessChange);
+      provider.awareness.off("change", handleAwarenessChange);
       cursorsRef.current.forEach((decorations) => {
         editor.deltaDecorations(decorations, []);
       });
@@ -238,7 +279,12 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   useEffect(() => {
     if (provider == null || editor == null) return;
 
-    const binding = new MonacoBinding(ydoc.getText(), editor.getModel()!, new Set([editor]), provider.awareness);
+    const binding = new MonacoBinding(
+      ydoc.getText(),
+      editor.getModel()!,
+      new Set([editor]),
+      provider.awareness
+    );
     setBinding(binding);
 
     return () => {
@@ -254,16 +300,26 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
 
   const runCode = () => {
     if (editor) {
-      const code = editor.getModel()?.getValue() || '';
+      const code = editor.getModel()?.getValue() || "";
       try {
         const log: string[] = [];
         const originalConsoleLog = console.log;
         console.log = (...args) => {
-          log.push(args.join(' '));
+          log.push(args.join(" "));
         };
         eval(code);
         console.log = originalConsoleLog;
-        setCodeOutput(log.join('\n'));
+        setCodeOutput(log.join("\n"));
+
+        const attempt: AttemptHistory = {
+          studentId: userId,
+          questionId: questionId,
+          roomId: roomId,
+          timeAttempted: new Date(),
+          programmingLanguage: currentLanguage,
+          attemptCode: code,
+        };
+        setCurrentAttempt(attempt);
       } catch (error) {
         setCodeOutput((error as Error).toString());
       }
@@ -271,7 +327,8 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
-    const initialLanguage = provider?.awareness.getLocalState()?.language[0] || 'javascript';
+    const initialLanguage =
+      provider?.awareness.getLocalState()?.language[0] || "javascript";
     return initialLanguage;
   });
 
@@ -279,7 +336,10 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
     const newLanguage = e.target.value;
     setCurrentLanguage(newLanguage);
     if (provider) {
-      provider.awareness.setLocalStateField('language', [newLanguage, Date.now()]);
+      provider.awareness.setLocalStateField("language", [
+        newLanguage,
+        Date.now(),
+      ]);
     }
   };
 
@@ -288,77 +348,100 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
 
     const handleAwarenessChange = () => {
       const states = Array.from(provider.awareness.getStates().values());
-      const currentUserLanguageState = states.find((state: any) => state.user.id === currentUser.id)?.language;
-      const otherUserLanguageState = states.find((state: any) => state.user.id !== currentUser.id)?.language;
-      const latestLanguageState = 
-        otherUserLanguageState && (!currentUserLanguageState || otherUserLanguageState[1] > currentUserLanguageState[1])
+      const currentUserLanguageState = states.find(
+        (state: any) => state.user.id === currentUser.id
+      )?.language;
+      const otherUserLanguageState = states.find(
+        (state: any) => state.user.id !== currentUser.id
+      )?.language;
+      const latestLanguageState =
+        otherUserLanguageState &&
+        (!currentUserLanguageState ||
+          otherUserLanguageState[1] > currentUserLanguageState[1])
           ? otherUserLanguageState
           : currentUserLanguageState;
 
-      if (latestLanguageState && latestLanguageState !== currentUserLanguageState) {
-        if (!toast.isActive('language-change-toast')) {
+      if (
+        latestLanguageState &&
+        latestLanguageState !== currentUserLanguageState
+      ) {
+        if (!toast.isActive("language-change-toast")) {
           toast({
-            id: 'language-change-toast',
+            id: "language-change-toast",
             title: "Language changed",
-            description: `The language has been changed to ${languages.get(latestLanguageState[0])}`,
+            description: `The language has been changed to ${languages.get(
+              latestLanguageState[0]
+            )}`,
             status: "info",
             duration: 2000,
             isClosable: true,
-            position: "top"
+            position: "top",
           });
         }
         setCurrentLanguage(latestLanguageState[0]);
       }
     };
 
-    provider.awareness.on('change', handleAwarenessChange);
+    provider.awareness.on("change", handleAwarenessChange);
     handleAwarenessChange();
 
     return () => {
-      provider.awareness.off('change', handleAwarenessChange);
+      provider.awareness.off("change", handleAwarenessChange);
     };
   }, [provider, currentUser, currentLanguage, toast]);
 
-  return (
-    connectedToRoom ? (
-      <Flex direction="column" className='h-full'>
-        <Flex direction="row" background='#f5f5f5'>
-            <Select
-            margin={2}
-            value={currentLanguage}
-            onChange={handleLanguageChange}
-            >
-            {Array.from(languages).map(([key, value]) => (
-              <option key={key} value={key}>{value}</option>
-            ))}
-            </Select>
-        </Flex>
-        <Editor
-          height="100%"
-          defaultValue="// some comment"
-          theme='vs-dark'
-          language={currentLanguage}
-          onMount={setEditor}
-          options={{
-            minimap: { enabled: false },
-            automaticLayout: true
-          }}
-        />
-        <Textarea
-          flex="0 0 20%"
-          fontFamily={'monospace'}
-          backgroundColor="#f5f5f5"
-          placeholder={`Your code output will be shown here.\nOnly JavaScript code can be run.`}
-          value={codeOutput}
-          readOnly
-        />
-        <Flex justify="space-between" align="center" width="100%" padding="20px">
-          <div className="flex flex-wrap gap-2">
-            {connectedUsers.length ? connectedUsers.map(({ user }) => (
+  useEffect(() => {
+    if (!currentAttempt) return;
+
+    console.log("Saving attempt to history service", currentAttempt);
+    addAttemptHistory(currentAttempt);
+  }, [currentAttempt]);
+
+  return connectedToRoom ? (
+    <Flex direction="column" className="h-full">
+      <Flex direction="row" background="#f5f5f5">
+        <Select
+          margin={2}
+          value={currentLanguage}
+          onChange={handleLanguageChange}
+        >
+          {Array.from(languages).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
+            </option>
+          ))}
+        </Select>
+      </Flex>
+      <Editor
+        height="100%"
+        defaultValue="// some comment"
+        theme="vs-dark"
+        language={currentLanguage}
+        onMount={setEditor}
+        options={{
+          minimap: { enabled: false },
+          automaticLayout: true,
+        }}
+      />
+      <Textarea
+        flex="0 0 20%"
+        fontFamily={"monospace"}
+        backgroundColor="#f5f5f5"
+        placeholder={`Your code output will be shown here.\nOnly JavaScript code can be run.`}
+        value={codeOutput}
+        readOnly
+      />
+      <Flex justify="space-between" align="center" width="100%" padding="20px">
+        <div className="flex flex-wrap gap-2">
+          {connectedUsers.length ? (
+            connectedUsers.map(({ user }) => (
               <div
                 key={user.id}
                 className="flex items-center gap-2 px-3 py-1 rounded-full"
-                style={{ backgroundColor: `${user.color}20`, border: `2px solid ${user.color}` }}
+                style={{
+                  backgroundColor: `${user.color}20`,
+                  border: `2px solid ${user.color}`,
+                }}
               >
                 <div
                   className="w-2 h-2 rounded-full"
@@ -366,19 +449,21 @@ const YjsEditor = ({ userId, roomId, onConnectionChange }: IProps) => {
                 />
                 <span>{user.id}</span>
               </div>
-            )) : (
-              <span>No connected users</span>
-            )}
-          </div>
-          <Button alignSelf="flex-end" onClick={runCode}>Run</Button>
-        </Flex>
+            ))
+          ) : (
+            <span>No connected users</span>
+          )}
+        </div>
+        <Button alignSelf="flex-end" onClick={runCode}>
+          Run
+        </Button>
       </Flex>
-    ) : (
-      <div className="flex flex-col justify-center items-center h-full">
-        <Spinner size='xl' m={5} />
-        <Text>Connecting to room...</Text>
-      </div>
-    )
+    </Flex>
+  ) : (
+    <div className="flex flex-col justify-center items-center h-full">
+      <Spinner size="xl" m={5} />
+      <Text>Connecting to room...</Text>
+    </div>
   );
 };
 

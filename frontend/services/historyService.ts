@@ -1,7 +1,10 @@
-import { QuestionHistory } from "@/types/History";
+import { QuestionHistory, AttemptHistory } from "@/types/History";
 import axios from "axios";
 
-const base_url = process.env.NEXT_PUBLIC_HISTORY_SERVICE_DOMAIN  || process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN || "http://localhost:8090";
+const base_url =
+  process.env.NEXT_PUBLIC_HISTORY_SERVICE_DOMAIN ||
+  process.env.NEXT_PUBLIC_API_GATEWAY_DOMAIN ||
+  "http://localhost:8090";
 
 const axiosInstance = axios.create({ baseURL: base_url });
 
@@ -29,6 +32,15 @@ export const getQuestionHistory = async (
 export const addHistory = async (history: QuestionHistory) => {
   try {
     await axiosInstance.post("/history/questions", history);
+  } catch (error) {
+    console.error("Error adding history:", error);
+    throw error;
+  }
+};
+
+export const addAttemptHistory = async (attempt: AttemptHistory) => {
+  try {
+    await axiosInstance.post("/history/attempts/", attempt);
   } catch (error) {
     console.error("Error adding history:", error);
     throw error;
