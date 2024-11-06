@@ -34,6 +34,7 @@ import { getRoom } from "@/services/collabService";
 import { IoMdEyeOff, IoMdEye } from "react-icons/io";
 import { marked } from "marked";
 import { difficultyText, topicText } from "@/app/utils";
+import { useRouter } from "next/router";
 
 type PageParams = {
   params: {
@@ -66,14 +67,14 @@ export default function Page({ params }: PageParams) {
     };
 
     fetchData()
-      .then(() => {
+      .finally(() => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error getting attempts:", error);
+        console.error("Error getting data:", error);
         Toast({
           title: "Error",
-          description: "There was an error getting the attempts.",
+          description: "There was an error getting the data.",
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -87,9 +88,17 @@ export default function Page({ params }: PageParams) {
     setSelectedAttempt(attempts[0]);
   }, [attempts]);
 
+  if (!loading && !room) {
+    return (
+      <Box textAlign="center">
+        <Text>No history found</Text>
+      </Box>
+    );
+  }
+
   return (
     <Box>
-      {loading ? (
+      {loading || !room ? (
         <Box textAlign="center">
           <Spinner size="xl" m={5} />
           <Text>Getting things ready...</Text>
@@ -117,7 +126,6 @@ export default function Page({ params }: PageParams) {
                   {attempts.map((attempt) => (
                     <Tr
                       key={attempt.timeAttempted.toISOString()}
-                      onClick={() => setSelectedAttempt(attempt)}
                       bg={
                         selectedAttempt?.timeAttempted === attempt.timeAttempted
                           ? "blue.50"
@@ -143,7 +151,7 @@ export default function Page({ params }: PageParams) {
               <Flex alignItems={"center"}>
                 <Box flex="1">
                   <Text fontSize="2xl" mb={3}>
-                    {room?.question.title}{" "}
+                    {room?.question.title}
                   </Text>
                 </Box>
 
