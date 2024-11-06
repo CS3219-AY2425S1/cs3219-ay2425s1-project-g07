@@ -393,8 +393,23 @@ const YjsEditor = ({
   useEffect(() => {
     if (!currentAttempt) return;
 
-    console.log("Saving attempt to history service", currentAttempt);
     addAttemptHistory(currentAttempt);
+
+    const collaboratorId = connectedUsers.find(
+      (user) => user.user.id !== userId
+    )?.user.id;
+
+    if (!collaboratorId) return;
+
+    const collaboratorAttempt: AttemptHistory = {
+      studentId: collaboratorId,
+      questionId: questionId,
+      roomId: roomId,
+      timeAttempted: new Date(),
+      programmingLanguage: currentLanguage,
+      attemptCode: currentAttempt.attemptCode,
+    };
+    addAttemptHistory(collaboratorAttempt);
   }, [currentAttempt]);
 
   return connectedToRoom ? (
