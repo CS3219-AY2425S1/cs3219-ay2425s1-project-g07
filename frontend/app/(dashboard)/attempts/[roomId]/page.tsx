@@ -26,6 +26,7 @@ import {
   Tag,
   TagLabel,
   Flex,
+  Button,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Question } from "@/types/Question";
@@ -33,8 +34,8 @@ import { Room } from "@/types/Room";
 import { getRoom } from "@/services/collabService";
 import { IoMdEyeOff, IoMdEye } from "react-icons/io";
 import { marked } from "marked";
-import { difficultyText, topicText } from "@/app/utils";
-import { useRouter } from "next/router";
+import { topicText } from "@/app/utils";
+import { useRouter } from 'next/navigation';
 
 type PageParams = {
   params: {
@@ -43,6 +44,7 @@ type PageParams = {
 };
 
 export default function Page({ params }: PageParams) {
+  const router = useRouter();
   const roomId = params.roomId;
   const [attempts, setAttempts] = useState<AttemptHistory[]>([]);
   const { username } = useAuth();
@@ -90,8 +92,18 @@ export default function Page({ params }: PageParams) {
 
   if (!loading && !room) {
     return (
-      <Box textAlign="center">
-        <Text>No history found</Text>
+      <Box textAlign="center" mt={20}>
+        <Box mb={4}>
+          <Text fontSize="2xl" fontWeight="bold">
+            No History Found
+          </Text>
+          <Text color="gray.500">
+            It looks like there are no attempts submitted for this session.
+          </Text>
+        </Box>
+        <Button colorScheme="teal" onClick={() => router.push('/profile')}>
+          Back to Profile
+        </Button>
       </Box>
     );
   }
@@ -131,7 +143,7 @@ export default function Page({ params }: PageParams) {
                         key={attempt.timeAttempted.toISOString()}
                         bg={
                           selectedAttempt?.timeAttempted ===
-                          attempt.timeAttempted
+                            attempt.timeAttempted
                             ? "blue.50"
                             : "white"
                         }
