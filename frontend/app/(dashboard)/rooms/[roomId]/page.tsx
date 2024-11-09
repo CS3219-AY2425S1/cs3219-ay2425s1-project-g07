@@ -20,23 +20,26 @@ export default function Page({ params }: PageParams) {
   const [room, setRoom] = useState<Room>();
   const [loading, setLoading] = useState(true);
   const { username } = useAuth();
-  const [questionId, setQuestionId] = useState<string>();
+  const [questionId, setQuestionId] = useState<string>("");
 
   useEffect(() => {
     const fetchRoom = async () => {
       const room = await getRoom(roomId, username);
       setRoom(room);
-      setQuestionId(room.question._id);
-      setLoading(false);
-      setLoading(!username); // If username is not yet available, keep loading
+      if (room) {
+        setQuestionId(room.question._id!); // _id will definitely exist, filled by mongodb
+        setLoading(!username || !room); // If username is not yet available, keep loading
+      } else {
+        setLoading(false);
+      }
     };
-
+    setLoading(true);
     fetchRoom();
   }, [roomId, username]);
 
   return (
     <>
-      {loading || !room || !questionId ? (
+      {loading ? (
         <div className="flex flex-col justify-center items-center min-h-screen">
           <Spinner size="xl" m={5} />
           <Text>Getting things ready...</Text>
