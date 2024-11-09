@@ -135,6 +135,7 @@ export default function Page({ params }: PageParams) {
                             ? "blue.50"
                             : "white"
                         }
+                        onClick={() => setSelectedAttempt(attempt)}
                         cursor="pointer"
                       >
                         <Td>{attempt.timeAttempted.toLocaleDateString()}</Td>
