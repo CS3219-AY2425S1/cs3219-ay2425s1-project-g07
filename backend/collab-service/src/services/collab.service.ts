@@ -85,7 +85,8 @@ export class CollabService implements OnModuleInit {
       question: question,
       doc: new Y.Doc(),
       user1: user1,
-      user2: user2
+      user2: user2,
+      created: Date.now()
     };
 
     this.rooms.set(roomId, room);
@@ -190,14 +191,15 @@ export class CollabService implements OnModuleInit {
   }
 
   private cleanUpEmptyRooms() {
+    const expiry = 3600 * 1000; // 1 hour in milliseconds
     setInterval(() => {
       this.rooms.forEach((room, roomId) => {
-        if (room.users.size === 0 && roomId !== 'default') {
+        if (room.users.size === 0 && room.created.valueOf() + expiry < Date.now()) {
           console.log(`Cleaning up room ${roomId}`);
           this.rooms.delete(roomId);
         }
       });
-    }, 5 * 60 * 1000); // 5 minutes in milliseconds
+    }, 5 * 60 * 1000);
   }
 
   private async getQuestion(topic: string, difficulty: string): Promise<Question> {

@@ -7,6 +7,7 @@ export interface Room {
     doc: Y.Doc;
     user1: string;
     user2: string;
+    created: Number;
 }
 
 export class RoomResponse {
