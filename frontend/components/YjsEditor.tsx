@@ -310,20 +310,34 @@ const YjsEditor = ({
         eval(code);
         console.log = originalConsoleLog;
         setCodeOutput(log.join("\n"));
-
-        const attempt: AttemptHistory = {
-          studentId: userId,
-          questionId: questionId,
-          roomId: roomId,
-          timeAttempted: new Date(),
-          programmingLanguage: currentLanguage,
-          attemptCode: code,
-        };
-        setCurrentAttempt(attempt);
       } catch (error) {
         setCodeOutput((error as Error).toString());
       }
     }
+  };
+
+  const submitCode = () => {
+    if (!editor) return;
+
+    const code = editor.getModel()?.getValue() || "";
+    const attempt: AttemptHistory = {
+      studentId: userId,
+      questionId: questionId,
+      roomId: roomId,
+      timeAttempted: new Date(),
+      programmingLanguage: currentLanguage,
+      attemptCode: code,
+    };
+    setCurrentAttempt(attempt);
+
+    toast({
+      title: "Code submitted",
+      description: "Your code has been submitted successfully.",
+      status: "success",
+      duration: 2000,
+      isClosable: true,
+      position: "top",
+    });
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
@@ -469,9 +483,19 @@ const YjsEditor = ({
             <span>No connected users</span>
           )}
         </div>
-        <Button alignSelf="flex-end" onClick={runCode}>
-          Run
-        </Button>
+        <Flex gap={2}>
+          <Button alignSelf="flex-end" onClick={runCode}>
+            Run
+          </Button>
+          <Button
+            alignSelf="flex-end"
+            colorScheme="teal"
+            variant="solid"
+            onClick={submitCode}
+          >
+            Submit
+          </Button>
+        </Flex>
       </Flex>
     </Flex>
   ) : (

@@ -97,7 +97,7 @@ export default function Page({ params }: PageParams) {
   }
 
   return (
-    <Box>
+    <Box height="100vh" display="flex" flexDirection="column">
       {loading || !room ? (
         <Box textAlign="center">
           <Spinner size="xl" m={5} />
@@ -109,161 +109,168 @@ export default function Page({ params }: PageParams) {
           gap={5}
           padding={2}
           height={"100%"}
+          flex="1"
+          overflow={"hidden"}
         >
           <GridItem colSpan={1}>
-            <Card padding={4}>
-              <Text fontSize="2xl" mb={3} textAlign={"left"}>
-                Attempts
-              </Text>
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Attempted</Th>
-                    <Th>Language</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {attempts.map((attempt) => (
-                    <Tr
-                      key={attempt.timeAttempted.toISOString()}
-                      bg={
-                        selectedAttempt?.timeAttempted === attempt.timeAttempted
-                          ? "blue.50"
-                          : "white"
-                      }
-                      cursor="pointer"
-                    >
-                      <Td>{attempt.timeAttempted.toLocaleDateString()}</Td>
-                      <Td>
-                        <Tag colorScheme="teal">
-                          {attempt.programmingLanguage}
-                        </Tag>
-                      </Td>
+            <Card height="90vh" padding={4} overflow={"hidden"}>
+              <Box height="auto" overflowY="scroll">
+                <Text fontSize="2xl" mb={3} textAlign={"left"}>
+                  Attempts
+                </Text>
+                <Table variant="simple">
+                  <Thead>
+                    <Tr>
+                      <Th>Attempted</Th>
+                      <Th>Language</Th>
                     </Tr>
-                  ))}
-                </Tbody>
-              </Table>
+                  </Thead>
+                  <Tbody>
+                    {attempts.map((attempt) => (
+                      <Tr
+                        key={attempt.timeAttempted.toISOString()}
+                        bg={
+                          selectedAttempt?.timeAttempted ===
+                          attempt.timeAttempted
+                            ? "blue.50"
+                            : "white"
+                        }
+                        cursor="pointer"
+                      >
+                        <Td>{attempt.timeAttempted.toLocaleDateString()}</Td>
+                        <Td>
+                          <Tag colorScheme="teal">
+                            {attempt.programmingLanguage}
+                          </Tag>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </Box>
             </Card>
           </GridItem>
 
           <GridItem colSpan={5}>
-            <Card padding={6}>
-              <Flex alignItems={"center"}>
-                <Box flex="1">
-                  <Text fontSize="2xl" mb={3}>
-                    {room?.question.title}
-                  </Text>
-                </Box>
+            <Card maxHeight="90vh" padding={6} overflow={"hidden"}>
+              <Box height="auto" overflowY="scroll">
+                <Flex alignItems={"center"}>
+                  <Box flex="1">
+                    <Text fontSize="2xl" mb={3}>
+                      {room?.question.title}
+                    </Text>
+                  </Box>
 
-                <Text fontSize={"small"}>
-                  {room?.question.topics.map((topic, idx) =>
-                    topicText(topic, idx)
-                  )}
-                </Text>
-              </Flex>
-
-              {selectedAttempt ? (
-                <Box>
-                  <Text mb={2}>
-                    <strong>Attempted:</strong>{" "}
-                    {selectedAttempt.timeAttempted.toDateString()}
-                    {", "}
-                    {selectedAttempt.timeAttempted.toLocaleTimeString()}
+                  <Text fontSize={"small"}>
+                    {room?.question.topics.map((topic, idx) =>
+                      topicText(topic, idx)
+                    )}
                   </Text>
-                  <Text mb={2}>
-                    <strong>Collaborators:</strong>{" "}
-                    {room?.users.map((user, idx) => (
-                      <Tag key={idx} colorScheme="blue" mr={1}>
-                        <TagLabel>{user}</TagLabel>
+                </Flex>
+
+                {selectedAttempt ? (
+                  <Box>
+                    <Text mb={2}>
+                      <strong>Attempted:</strong>{" "}
+                      {selectedAttempt.timeAttempted.toDateString()}
+                      {", "}
+                      {selectedAttempt.timeAttempted.toLocaleTimeString()}
+                    </Text>
+                    <Text mb={2}>
+                      <strong>Collaborators:</strong>{" "}
+                      {room?.users.map((user, idx) => (
+                        <Tag key={idx} colorScheme="blue" mr={1}>
+                          <TagLabel>{user}</TagLabel>
+                        </Tag>
+                      ))}
+                    </Text>
+                    <Text mb={2}>{""}</Text>
+                    <Flex mb={2}>
+                      <Box flex="1" textAlign={"left"}>
+                        <Text>
+                          <strong>Code: </strong>
+                        </Text>
+                      </Box>
+                      <Tag
+                        colorScheme="teal"
+                        textAlign={"center"}
+                        justifyContent={"center"}
+                      >
+                        {selectedAttempt.programmingLanguage}
                       </Tag>
-                    ))}
-                  </Text>
-                  <Text mb={2}>{""}</Text>
-                  <Flex mb={2}>
-                    <Box flex="1" textAlign={"left"}>
-                      <Text>
-                        <strong>Code: </strong>
-                      </Text>
-                    </Box>
-                    <Tag
-                      colorScheme="teal"
-                      textAlign={"center"}
-                      justifyContent={"center"}
+                    </Flex>
+
+                    <Code
+                      display="block"
+                      whiteSpace="pre-wrap"
+                      p={4}
+                      bg="gray.100"
+                      borderRadius="md"
+                      overflowX="auto"
+                      mb={4}
                     >
-                      {selectedAttempt.programmingLanguage}
-                    </Tag>
-                  </Flex>
+                      {selectedAttempt.attemptCode}
+                    </Code>
+                    {question ? (
+                      <Box>
+                        <Accordion allowToggle allowMultiple size="lg">
+                          <AccordionItem>
+                            <AccordionButton>
+                              <Box flex="1" textAlign="left">
+                                <strong>Question Description</strong>
+                              </Box>
+                              <AccordionIcon />
+                            </AccordionButton>
+                            <AccordionPanel pb={4}>
+                              <Text mb={2}>
+                                <div
+                                  className="max-h-fit"
+                                  dangerouslySetInnerHTML={{
+                                    __html: marked(question.description || ""),
+                                  }}
+                                ></div>
+                              </Text>
+                            </AccordionPanel>
+                          </AccordionItem>
 
-                  <Code
-                    display="block"
-                    whiteSpace="pre-wrap"
-                    p={4}
-                    bg="gray.100"
-                    borderRadius="md"
-                    overflowX="auto"
-                    mb={4}
-                  >
-                    {selectedAttempt.attemptCode}
-                  </Code>
-                  {question ? (
-                    <Box>
-                      <Accordion allowToggle allowMultiple size="lg">
-                        <AccordionItem>
-                          <AccordionButton>
-                            <Box flex="1" textAlign="left">
-                              <strong>Question Description</strong>
-                            </Box>
-                            <AccordionIcon />
-                          </AccordionButton>
-                          <AccordionPanel pb={4}>
-                            <Text mb={2}>
-                              <div
-                                className="max-h-fit"
-                                dangerouslySetInnerHTML={{
-                                  __html: marked(question.description || ""),
-                                }}
-                              ></div>
-                            </Text>
-                          </AccordionPanel>
-                        </AccordionItem>
-
-                        <AccordionItem>
-                          {({ isExpanded }) => (
-                            <>
-                              <AccordionButton>
-                                <Box textAlign="left">
-                                  <strong>Solution</strong>
-                                </Box>
-                                <Box flex="1" mx={2}>
-                                  {isExpanded ? <IoMdEye /> : <IoMdEyeOff />}
-                                </Box>
-                                <AccordionIcon />
-                              </AccordionButton>
-                              <AccordionPanel pb={4}>
-                                <Text mb={2}>Suggested Solution:</Text>
-                                <Code
-                                  display="block"
-                                  whiteSpace="pre-wrap"
-                                  p={4}
-                                  bg="gray.100"
-                                  borderRadius="md"
-                                  overflowX="auto"
-                                >
-                                  {question.solution}
-                                </Code>
-                              </AccordionPanel>
-                            </>
-                          )}
-                        </AccordionItem>
-                      </Accordion>
-                    </Box>
-                  ) : (
-                    <Text>No question to show</Text>
-                  )}
-                </Box>
-              ) : (
-                <Text>No attempts to show</Text>
-              )}
+                          <AccordionItem>
+                            {({ isExpanded }) => (
+                              <>
+                                <AccordionButton>
+                                  <Box textAlign="left">
+                                    <strong>Solution</strong>
+                                  </Box>
+                                  <Box flex="1" mx={2}>
+                                    {isExpanded ? <IoMdEye /> : <IoMdEyeOff />}
+                                  </Box>
+                                  <AccordionIcon />
+                                </AccordionButton>
+                                <AccordionPanel pb={4}>
+                                  <Text mb={2}>Suggested Solution:</Text>
+                                  <Code
+                                    display="block"
+                                    whiteSpace="pre-wrap"
+                                    p={4}
+                                    bg="gray.100"
+                                    borderRadius="md"
+                                    overflowX="auto"
+                                  >
+                                    {question.solution}
+                                  </Code>
+                                </AccordionPanel>
+                              </>
+                            )}
+                          </AccordionItem>
+                        </Accordion>
+                      </Box>
+                    ) : (
+                      <Text>No question to show</Text>
+                    )}
+                  </Box>
+                ) : (
+                  <Text>No attempts to show</Text>
+                )}
+              </Box>
             </Card>
           </GridItem>
         </Grid>
