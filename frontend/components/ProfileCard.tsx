@@ -138,12 +138,6 @@ export const ProfileCard = () => {
 	return (
 		<Card backgroundColor={"#FFFFFF"} minWidth={320} maxWidth={360}>
 			<HStack>
-				<Avatar
-					size="2xl"
-					name={username}
-					src="https://cdn-icons-png.flaticon.com/128/17446/17446833.png"
-					margin="30px"
-				/>
 				<VStack align="left" margin="10px">
 					<Tag
 						size="sm"
