@@ -29,6 +29,19 @@ export default function SignupPage() {
       return;
     }
 
+    if (/\s/.test(username)) {
+      toast.closeAll();
+      toast({
+        title: 'Error',
+        description: 'Username cannot contain spaces',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+        position: "top"
+      });
+      return;
+    }
+
     if (password !== rePassword) {
       toast.closeAll();
       toast({

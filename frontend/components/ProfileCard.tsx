@@ -93,6 +93,19 @@ export const ProfileCard = () => {
 			return;
 		}
 
+		if (/\s/.test(newUsername)) {
+			toast.closeAll();
+			toast({
+				title: 'Error',
+				description: 'Username cannot contain spaces',
+				status: 'error',
+				duration: 3000,
+				isClosable: true,
+				position: "top"
+			});
+			return;
+		}
+
 		try {
 			await updateUser(userId, { username: newUsername, email: newEmail });
 			toast.closeAll();
