@@ -17,6 +17,7 @@ import {
 } from "@chakra-ui/react";
 import { AttemptHistory } from "@/types/History";
 import { addAttemptHistory } from "@/services/historyService";
+import assert from "assert";
 
 interface User {
   id: string;
@@ -340,15 +341,7 @@ const YjsEditor = ({
       attemptCode: code,
     };
     setCurrentAttempt(attempt);
-
-    toast({
-      title: "Code submitted",
-      description: "Your code has been submitted successfully.",
-      status: "success",
-      duration: 2000,
-      isClosable: true,
-      position: "top",
-    });
+    saveAttempt(attempt); //Submit Code cannot run if room is undefined as we show loading screen.
   };
 
   const [currentLanguage, setCurrentLanguage] = useState<string>(() => {
@@ -415,16 +408,22 @@ const YjsEditor = ({
     };
   }, [provider, currentUser, currentLanguage, toast]);
 
-  useEffect(() => {
-    if (!currentAttempt) return;
+  const saveAttempt = (attempt: AttemptHistory) => {
+    assert(connectedUsers.length > 0, "No connected users found");
+    assert(connectedUsers.length === 2, "Only 2 users can be connected");
 
-    addAttemptHistory(currentAttempt);
+    addAttemptHistory(attempt);
 
-    const collaboratorId = connectedUsers.find(
-      (user) => user.user.id !== userId
-    )?.user.id;
+    const collaboratorId = connectedUsers.filter(
+      (conUser) => conUser.user.id !== userId
+    )[0].user.id;
 
-    if (!collaboratorId) return;
+    if (!collaboratorId) {
+      console.error(
+        "Collaborator ID not found, unable to save attempt for collaborator"
+      );
+      return;
+    }
 
     const collaboratorAttempt: AttemptHistory = {
       studentId: collaboratorId,
@@ -432,10 +431,19 @@ const YjsEditor = ({
       roomId: roomId,
       timeAttempted: new Date(),
       programmingLanguage: currentLanguage,
-      attemptCode: currentAttempt.attemptCode,
+      attemptCode: attempt.attemptCode,
     };
     addAttemptHistory(collaboratorAttempt);
-  }, [currentAttempt]);
+
+    toast({
+      title: "Code submitted",
+      description: "Your code has been submitted successfully.",
+      status: "success",
+      duration: 2000,
+      isClosable: true,
+      position: "top",
+    });
+  };
 
   return connectedToRoom ? (
     <Flex direction="column" className="h-full">
