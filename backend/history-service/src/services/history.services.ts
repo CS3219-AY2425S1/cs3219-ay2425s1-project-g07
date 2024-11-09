@@ -65,6 +65,25 @@ export class QuestionHistoryService {
     return questionHistory;
   }
 
+  async findByStudentIdAndRoomId(
+    studentId: string,
+    roomId: string,
+  ): Promise<QuestionHistory> {
+    const questionHist = await this.questionHistoryModel
+      .findOne({
+        studentId,
+        roomId,
+      })
+      .exec();
+
+    if (!questionHist) {
+      throw new NotFoundException(
+        `QuestionHistory with roomID ${roomId} by student ${studentId} not found. Result ${questionHist}`,
+      );
+    }
+    return questionHist;
+  }
+
   async update(
     id: string,
     updateQuestionHistoryDto: UpdateQuestionHistoryDto,

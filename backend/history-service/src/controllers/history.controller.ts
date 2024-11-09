@@ -37,6 +37,17 @@ export class QuestionHistoryController {
     return this.questionHistoryService.findAllByStudentId(studentId);
   }
 
+  @Get('student/:studentId/room/:roomId')
+  async findByStudentIdAndRoomId(
+    @Param('studentId') studentId: string,
+    @Param('roomId') roomId: string,
+  ): Promise<QuestionHistory> {
+    return this.questionHistoryService.findByStudentIdAndRoomId(
+      studentId,
+      roomId,
+    );
+  }
+
   @Post()
   @UsePipes(new ValidationPipe({ transform: true }))
   async create(

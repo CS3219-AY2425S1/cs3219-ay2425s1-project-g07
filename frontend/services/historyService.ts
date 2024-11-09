@@ -29,6 +29,24 @@ export const getQuestionHistory = async (
   }
 };
 
+export const getQuestionHistoryByRoomIdAndUserId = async (
+  userId: string,
+  roomId: string
+): Promise<QuestionHistory> => {
+  try {
+    const response = await axiosInstance.get(
+      `/history/questions/student/${userId}/room/${roomId}`
+    );
+
+    const questionHistory = response.data;
+
+    return questionHistory as QuestionHistory;
+  } catch (error) {
+    console.error("Error getting history:", error);
+    throw error;
+  }
+};
+
 export const addHistory = async (history: QuestionHistory) => {
   try {
     await axiosInstance.post("/history/questions", history);

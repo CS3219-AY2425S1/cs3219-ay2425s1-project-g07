@@ -1,7 +1,10 @@
 "use client";
 
-import { AttemptHistory } from "@/types/History";
-import { getAttemptHistoryForSession } from "@/services/historyService";
+import { AttemptHistory, QuestionHistory } from "@/types/History";
+import {
+  getAttemptHistoryForSession,
+  getQuestionHistoryByRoomIdAndUserId,
+} from "@/services/historyService";
 import useAuth from "@/hooks/useAuth";
 import {
   Spinner,
@@ -30,12 +33,11 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 import { Question } from "@/types/Question";
-import { Room } from "@/types/Room";
-import { getRoom } from "@/services/collabService";
 import { IoMdEyeOff, IoMdEye } from "react-icons/io";
 import { marked } from "marked";
 import { topicText } from "@/app/utils";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
+import { getQuestionById } from "@/services/questionService";
 
 type PageParams = {
   params: {
@@ -47,24 +49,44 @@ export default function Page({ params }: PageParams) {
   const router = useRouter();
   const roomId = params.roomId;
   const [attempts, setAttempts] = useState<AttemptHistory[]>([]);
-  const { username } = useAuth();
+  const { username, userId } = useAuth();
   const [loading, setLoading] = useState(true);
   const [selectedAttempt, setSelectedAttempt] = useState<
     AttemptHistory | undefined
   >();
   const [question, setQuestion] = useState<Question | undefined>();
-  const [room, setRoom] = useState<Room | undefined>();
+  const [questionHistory, setQuestionHistory] = useState<
+    QuestionHistory | undefined
+  >();
 
   useEffect(() => {
-    if (!username) return;
+    if (!username || !userId) return;
 
+    console.log("User ID", userId);
     const fetchData = async () => {
       const attempts = await getAttemptHistoryForSession(username, roomId);
-      const room = await getRoom(roomId, username);
-      setRoom(room);
-      setQuestion(room.question);
-      console.log("Setting room:", room);
-      console.log("Setting question:", room.question);
+      const questionHistory = await getQuestionHistoryByRoomIdAndUserId(
+        userId,
+        roomId
+      );
+
+      if (!questionHistory) {
+        console.error("Question History was not found");
+        throw new Error("Question History not found");
+      }
+
+      setQuestionHistory(questionHistory);
+      console.log("Setting question history", questionHistory);
+
+      const question = await getQuestionById(questionHistory.questionId);
+      if (!question) {
+        console.error("Question was not found");
+        throw new Error("Question not found");
+      }
+
+      setQuestion(question);
+      console.log("Setting question:", question);
+
       setAttempts(attempts);
     };
 
@@ -90,18 +112,36 @@ export default function Page({ params }: PageParams) {
     setSelectedAttempt(attempts[0]);
   }, [attempts]);
 
-  if (!loading && !room) {
+  if (!loading && !questionHistory) {
     return (
       <Box textAlign="center" mt={20}>
         <Box mb={4}>
           <Text fontSize="2xl" fontWeight="bold">
-            No History Found
+            The History was Deleted.
           </Text>
           <Text color="gray.500">
-            It looks like there are no attempts submitted for this session.
+            It looks like the history was deleted for this session.
           </Text>
         </Box>
-        <Button colorScheme="teal" onClick={() => router.push('/profile')}>
+        <Button colorScheme="teal" onClick={() => router.push("/profile")}>
+          Back to Profile
+        </Button>
+      </Box>
+    );
+  }
+
+  if (!loading && !question) {
+    return (
+      <Box textAlign="center" mt={20}>
+        <Box mb={4}>
+          <Text fontSize="2xl" fontWeight="bold">
+            The Question was Deleted.
+          </Text>
+          <Text color="gray.500">
+            It looks like the question was deleted for this session.
+          </Text>
+        </Box>
+        <Button colorScheme="teal" onClick={() => router.push("/profile")}>
           Back to Profile
         </Button>
       </Box>
@@ -110,7 +150,7 @@ export default function Page({ params }: PageParams) {
 
   return (
     <Box height="100vh" display="flex" flexDirection="column">
-      {loading || !room ? (
+      {loading || !question || !questionHistory ? (
         <Box textAlign="center">
           <Spinner size="xl" m={5} />
           <Text>Getting things ready...</Text>
@@ -143,7 +183,7 @@ export default function Page({ params }: PageParams) {
                         key={attempt.timeAttempted.toISOString()}
                         bg={
                           selectedAttempt?.timeAttempted ===
-                            attempt.timeAttempted
+                          attempt.timeAttempted
                             ? "blue.50"
                             : "white"
                         }
@@ -170,14 +210,12 @@ export default function Page({ params }: PageParams) {
                 <Flex alignItems={"center"}>
                   <Box flex="1">
                     <Text fontSize="2xl" mb={3}>
-                      {room?.question.title}
+                      {question.title}
                     </Text>
                   </Box>
 
                   <Text fontSize={"small"}>
-                    {room?.question.topics.map((topic, idx) =>
-                      topicText(topic, idx)
-                    )}
+                    {question.topics.map((topic, idx) => topicText(topic, idx))}
                   </Text>
                 </Flex>
 
@@ -191,11 +229,13 @@ export default function Page({ params }: PageParams) {
                     </Text>
                     <Text mb={2}>
                       <strong>Collaborators:</strong>{" "}
-                      {room?.users.map((user, idx) => (
-                        <Tag key={idx} colorScheme="blue" mr={1}>
-                          <TagLabel>{user}</TagLabel>
-                        </Tag>
-                      ))}
+                      {[username, questionHistory.collaboratorId].map(
+                        (user, idx) => (
+                          <Tag key={idx} colorScheme="blue" mr={1}>
+                            <TagLabel>{user}</TagLabel>
+                          </Tag>
+                        )
+                      )}
                     </Text>
                     <Text mb={2}>{""}</Text>
                     <Flex mb={2}>
@@ -226,7 +266,7 @@ export default function Page({ params }: PageParams) {
                     </Code>
                     {question ? (
                       <Box>
-                        <Accordion allowToggle allowMultiple size="lg">
+                        <Accordion allowMultiple size="lg">
                           <AccordionItem>
                             <AccordionButton>
                               <Box flex="1" textAlign="left">
