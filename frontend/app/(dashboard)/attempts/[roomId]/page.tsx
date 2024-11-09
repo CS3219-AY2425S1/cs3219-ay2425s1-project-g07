@@ -58,7 +58,7 @@ export default function Page({ params }: PageParams) {
 
     const fetchData = async () => {
       const attempts = await getAttemptHistoryForSession(username, roomId);
-      const room = await getRoom(roomId);
+      const room = await getRoom(roomId, username);
       setRoom(room);
       setQuestion(room.question);
       console.log("Setting room:", room);
