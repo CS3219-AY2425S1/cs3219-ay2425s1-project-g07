@@ -300,6 +300,17 @@ const YjsEditor = ({
 
   const runCode = () => {
     if (editor) {
+      if (currentLanguage !== "javascript") {
+        toast({
+          title: "Not permitted",
+          description: "Only javascript is permitted to run",
+          status: "warning",
+          duration: 2000,
+          isClosable: true,
+          position: "top",
+        });
+        return;
+      }
       const code = editor.getModel()?.getValue() || "";
       try {
         const log: string[] = [];
