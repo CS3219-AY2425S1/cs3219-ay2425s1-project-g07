@@ -87,8 +87,12 @@ services:
       dockerfile: Dockerfile
     environment:
       QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+      KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
+      COLLAB_SERVICE_CONSUMER_GROUP_ID: ${COLLAB_SERVICE_CONSUMER_GROUP_ID}
     depends_on:
       question-app:
+        condition: service_healthy
+      kafka:
         condition: service_healthy
     ports:
       - "8007:8007"
