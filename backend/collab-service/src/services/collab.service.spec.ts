@@ -41,7 +41,7 @@ describe('CollabService', () => {
       const topic = 'math';
       const difficulty = 'easy';
 
-      const result = await collabService.createRoom(roomId, topic, difficulty);
+      const result = await collabService.createRoom(roomId, topic, difficulty, 'user1', 'user2');
 
       expect(result).toEqual({
         id: roomId,
@@ -56,9 +56,9 @@ describe('CollabService', () => {
       const roomId = 'existingRoom';
       collabService.clearIntervals();
       collabService = new CollabService(configService);
-      const room = await collabService.createRoom(roomId, 'math', 'easy');
+      const room = await collabService.createRoom(roomId, 'math', 'easy', 'user1', 'user2');
       
-      const result = await collabService.createRoom(roomId, 'math', 'easy');
+      const result = await collabService.createRoom(roomId, 'math', 'easy', 'user1', 'user2');
       
       expect(result).toEqual(room);
       expect(axios.get).toHaveBeenCalledTimes(1); // Only one call to axios
@@ -67,7 +67,7 @@ describe('CollabService', () => {
     it('should return null if no question is found', async () => {
       (axios.get as jest.Mock).mockResolvedValue({ data: null });
       jest.spyOn(collabService, 'getQuestion').mockReturnValue(null);
-      const result = await collabService.createRoom('room123', 'math', 'easy');
+      const result = await collabService.createRoom('room123', 'math', 'easy', 'user1', 'user2');
 
       expect(result).toBeNull();
     });
@@ -76,7 +76,7 @@ describe('CollabService', () => {
   describe('joinRoom', () => {
     it('should add a user to an existing room', async () => {
       const roomId = 'roomToJoin';
-      await collabService.createRoom(roomId, 'math', 'easy');
+      await collabService.createRoom(roomId, 'math', 'easy','user1', 'user2');
       const userId = 'user1';
 
       const result = collabService.joinRoom(roomId, userId);
@@ -92,10 +92,18 @@ describe('CollabService', () => {
 
     it('should return null if room is full', async () => {
       const roomId = 'fullRoom';
-      await collabService.createRoom(roomId, 'math', 'easy');
+      await collabService.createRoom(roomId, 'math', 'easy', 'user1', 'user2');
       collabService.joinRoom(roomId, 'user1');
       collabService.joinRoom(roomId, 'user2');
 
+      const result = collabService.joinRoom(roomId, 'user1');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null if room is is not for the user', async () => {
+      const roomId = 'invalidRoom';
+      await collabService.createRoom(roomId, 'math', 'easy', 'user1', 'user2');
       const result = collabService.joinRoom(roomId, 'user3');
 
       expect(result).toBeNull();
@@ -106,7 +114,7 @@ describe('CollabService', () => {
     it('should remove a user from the room', async () => {
       const roomId = 'roomToLeave';
       const userId = 'userToLeave';
-      await collabService.createRoom(roomId, 'math', 'easy');
+      await collabService.createRoom(roomId, 'math', 'easy', userId, 'dummy');
       collabService.joinRoom(roomId, userId);
 
       const result = collabService.leaveRoom(userId);
@@ -123,8 +131,8 @@ describe('CollabService', () => {
 
   describe('getAllRooms', () => {
     it('should return a list of all rooms', async () => {
-      await collabService.createRoom('room1', 'math', 'easy');
-      await collabService.createRoom('room2', 'science', 'hard');
+      await collabService.createRoom('room1', 'math', 'easy','user1', 'user2');
+      await collabService.createRoom('room2', 'math','hard','user1', 'user2');
 
       const result = collabService.getAllRooms();
 
@@ -135,9 +143,9 @@ describe('CollabService', () => {
   });
 
   describe('getAvailableRooms', () => {
-    it('should return only rooms with less than 2 users', async () => {
-      await collabService.createRoom('availableRoom1', 'math', 'easy');
-      await collabService.createRoom('availableRoom2', 'science', 'hard');
+    it('should return only rooms for the specific user', async () => {
+      await collabService.createRoom('availableRoom1', 'math', 'easy', 'user1', 'user2');
+      await collabService.createRoom('availableRoom2', 'science', 'hard', 'user1', 'user2');
       collabService.joinRoom('availableRoom1', 'user1');
       collabService.joinRoom('availableRoom2', 'user1');
       collabService.joinRoom('availableRoom2', 'user2'); // Room with 2 users should be excluded
@@ -151,9 +159,9 @@ describe('CollabService', () => {
 
   describe('getRoom', () => {
     it('should return a room by its ID', async () => {
-      await collabService.createRoom('roomById', 'math', 'easy');
+      await collabService.createRoom('roomById', 'math', 'easy', 'dummyuser', 'dummyuser2');
 
-      const result = collabService.getRoom('roomById');
+      const result = collabService.getRoom('roomById', 'dummyuser');
 
       expect(result).toEqual({
         id: 'roomById',
@@ -163,15 +171,16 @@ describe('CollabService', () => {
       });
     });
 
-    it('should return null if room does not exist', () => {
-      const result = collabService.getRoom('nonExistentRoom');
+    it('should return null if room does not belong to user', async () => {
+      await collabService.createRoom('nonExistentRoom', 'math', 'easy', 'dummyuser', 'dummyuser2');
+      const result = collabService.getRoom('nonExistentRoom', 'dummyuser3');
       expect(result).toBeNull();
     });
   });
 
   describe('getRoomByClient', () => {
     it('should return a room associated with a user ID', async () => {
-      await collabService.createRoom('roomForUser', 'math', 'easy');
+      await collabService.createRoom('roomForUser', 'math', 'easy', 'user1', 'dummyuser2');
       collabService.joinRoom('roomForUser', 'user1');
 
       const result = collabService.getRoomByClient('user1');

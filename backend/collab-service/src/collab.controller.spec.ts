@@ -25,29 +25,6 @@ describe('CollabController', () => {
     collabService = module.get<CollabService>(CollabService);
   });
 
-  describe('createRoom', () => {
-    it('should call collabService.createRoom with the correct parameters', async () => {
-      const roomData = { roomId: '123', topic: 'math', difficulty: 'easy' };
-      const mockRoomResponse = {
-        id: '123',
-        users: [],
-        question: { id: 'q1', text: 'What is 2 + 2?', topic: 'math', difficulty: 'easy' },
-        doc: 'doc-uuid',
-      };
-      
-      (collabService.createRoom as jest.Mock).mockResolvedValue(mockRoomResponse);
-
-      const result = await collabController.createRoom(roomData);
-
-      expect(collabService.createRoom).toHaveBeenCalledWith(
-        roomData.roomId,
-        roomData.topic,
-        roomData.difficulty
-      );
-      expect(result).toEqual(mockRoomResponse);
-    });
-  });
-
   describe('getAllRooms', () => {
     it('should call collabService.getAllRooms and return its result', async () => {
       const mockRooms = [
@@ -69,9 +46,9 @@ describe('CollabController', () => {
       
       (collabService.getRoom as jest.Mock).mockResolvedValue(mockRoom);
 
-      const result = await collabController.getRoomById(roomId);
+      const result = await collabController.getRoomById(roomId, { userId: 'dummy'});
 
-      expect(collabService.getRoom).toHaveBeenCalledWith(roomId);
+      expect(collabService.getRoom).toHaveBeenCalledWith(roomId, 'dummy');
       expect(result).toEqual(mockRoom);
     });
   });
