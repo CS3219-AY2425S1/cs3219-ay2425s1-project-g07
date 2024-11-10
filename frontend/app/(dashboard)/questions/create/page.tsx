@@ -1,14 +1,17 @@
 "use client";
 
-import { Box, Button, FormControl, FormLabel, Input, Select, Flex, Textarea, useToast } from "@chakra-ui/react";
+import { Box, Button, FormControl, FormLabel, Input, Select, Flex, Textarea, useToast, Spinner } from "@chakra-ui/react";
 import { useState } from "react";
 import { Question, QuestionComplexity, QuestionTopic } from "@/types/Question";
 import { createQuestion } from "@/services/questionService";
 import { marked } from 'marked';
 import { topicText } from '@/app/utils';
 import { useRouter } from 'next/navigation';
+import useAuth from "@/hooks/useAuth";
+import Editor from '@monaco-editor/react';
 
 export default function CreateQuestionPage() {
+  const { isAdmin, isLoading } = useAuth();
   const router = useRouter();
   const toast = useToast();
 
@@ -17,6 +20,7 @@ export default function CreateQuestionPage() {
   const [topics, setTopics] = useState<Set<QuestionTopic>>(new Set());
   const [complexity, setComplexity] = useState<QuestionComplexity | undefined>();
   const [link, setLink] = useState("");
+  const [solution, setSolution] = useState("def main():\n\tprint(\"Hello, World!\")");
 
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value);
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value);
@@ -28,7 +32,7 @@ export default function CreateQuestionPage() {
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => setLink(e.target.value);
 
   const handleSubmit = async () => {
-    if (!title || !description || topics.size === 0 || !complexity || !link) {
+    if (!title || !description || topics.size === 0 || !complexity || !link || !solution) {
       toast.closeAll();
       toast({
         title: "All fields are required.",
@@ -46,6 +50,7 @@ export default function CreateQuestionPage() {
       topics: Array.from(topics),
       complexity,
       link,
+      solution,
     };
 
     try {
@@ -73,6 +78,11 @@ export default function CreateQuestionPage() {
       }
     }
   };
+
+  // Prevent non-admin users from accessing the page
+  if (!isLoading && !isAdmin) {
+    router.push('/questions');
+  }
 
   return (
     <Box p={8} h="100%">
@@ -106,7 +116,7 @@ export default function CreateQuestionPage() {
         <FormLabel>Topics</FormLabel>
         <Select name="topics" value="" onChange={handleTopicsChange}>
           <option value="" disabled>Select a topic</option>
-          {Object.values(QuestionTopic).map((topic) => (
+          {Object.values(QuestionTopic).filter((topic) => topic !== "any").map((topic) => (
             <option key={topic} value={topic}>
               {topic}
             </option>
@@ -142,14 +152,33 @@ export default function CreateQuestionPage() {
         <Input name="link" value={link} onChange={handleLinkChange} />
       </FormControl>
 
-      <Flex alignItems="center" gap={4}>
-        <Button colorScheme="teal" onClick={handleSubmit}>
-          Create
-        </Button>
-        <Button colorScheme="red" onClick={() => router.push('/questions')}>
-          Cancel
-        </Button>
-      </Flex>
+      <FormControl id="solution" mb={4} isRequired>
+        <FormLabel>Solution (Python)</FormLabel>
+        <Box height="400px" border="1px" borderColor="gray.200" borderRadius="md">
+          <Editor
+            height="100%"
+            value={solution}
+            onChange={(value) => setSolution(value || "")}
+            theme='vs-dark'
+            defaultLanguage="python"
+            options={{
+              minimap: { enabled: false },
+              automaticLayout: true
+            }}
+          />
+        </Box>
+      </FormControl>
+
+      {isAdmin && (
+        <Flex alignItems="center" gap={4} pb={4}>
+          <Button colorScheme="teal" onClick={handleSubmit}>
+            Create
+          </Button>
+          <Button colorScheme="red" onClick={() => router.push('/questions')}>
+            Cancel
+          </Button>
+        </Flex>
+      )}
     </Box>
   );
 }

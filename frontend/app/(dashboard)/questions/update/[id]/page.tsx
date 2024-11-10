@@ -1,14 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, Flex, useToast } from "@chakra-ui/react";
+import { Box, Button, FormControl, FormLabel, Input, Select, Textarea, Flex, useToast, Spinner } from "@chakra-ui/react";
 import { getQuestionById, updateQuestion } from "@/services/questionService";
 import { Question, QuestionComplexity, QuestionTopic } from "@/types/Question";
 import { marked } from "marked";
 import { topicText } from "@/app/utils";
 import { useRouter } from 'next/navigation';
+import useAuth from "@/hooks/useAuth";
+import Editor from '@monaco-editor/react';
 
 export default function Page({ params }: { params: { id: string } }) {
+  const { isAdmin, isLoading } = useAuth();
   const id = params.id;
   const router = useRouter();
   const toast = useToast();
@@ -18,6 +21,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const [topics, setTopics] = useState<Set<QuestionTopic>>(new Set());
   const [complexity, setComplexity] = useState<QuestionComplexity | "">("");
   const [link, setLink] = useState("");
+  const [solution, setSolution] = useState("");
 
   useEffect(() => {
     async function fetchQuestion() {
@@ -28,6 +32,7 @@ export default function Page({ params }: { params: { id: string } }) {
         setTopics(new Set(question.topics));
         setComplexity(question.complexity);
         setLink(question.link);
+        setSolution(question.solution);
       }
     }
 
@@ -44,7 +49,7 @@ export default function Page({ params }: { params: { id: string } }) {
   const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => setLink(e.target.value);
 
   const handleSubmit = async () => {
-    if (!title || !description || topics.size === 0 || !complexity || !link) {
+    if (!title || !description || topics.size === 0 || !complexity || !link || !solution) {
       toast.closeAll();
       toast({
         title: "All fields are required.",
@@ -62,6 +67,7 @@ export default function Page({ params }: { params: { id: string } }) {
       topics: Array.from(topics),
       complexity: complexity as QuestionComplexity,
       link,
+      solution,
     };
 
     try {
@@ -89,6 +95,11 @@ export default function Page({ params }: { params: { id: string } }) {
       }
     }
   };
+
+  // Prevent non-admin users from accessing the page
+  if (!isLoading && !isAdmin) {
+    router.push('/questions');
+  }
 
   return (
     <Box p={8} h="100%">
@@ -122,7 +133,7 @@ export default function Page({ params }: { params: { id: string } }) {
         <FormLabel>Topics</FormLabel>
         <Select name="topics" value="" onChange={handleTopicsChange}>
           <option value="" disabled>Select a topic</option>
-          {Object.values(QuestionTopic).map((topic) => (
+          {Object.values(QuestionTopic).filter((topic) => topic !== "any").map((topic) => (
             <option key={topic} value={topic}>
               {topic}
             </option>
@@ -158,14 +169,33 @@ export default function Page({ params }: { params: { id: string } }) {
         <Input name="link" value={link} onChange={handleLinkChange} />
       </FormControl>
 
-      <Flex alignItems="center" gap={4}>
-        <Button colorScheme="teal" onClick={handleSubmit}>
-          Update
-        </Button>
-        <Button colorScheme="red" onClick={() => router.push('/questions')}>
-          Cancel
-        </Button>
-      </Flex>
+      <FormControl id="solution" mb={4} isRequired>
+        <FormLabel>Solution (Python)</FormLabel>
+        <Box height="400px" border="1px" borderColor="gray.200" borderRadius="md">
+          <Editor
+            height="100%"
+            value={solution}
+            onChange={(value) => setSolution(value || "")}
+            theme='vs-dark'
+            defaultLanguage="python"
+            options={{
+              minimap: { enabled: false },
+              automaticLayout: true
+            }}
+          />
+        </Box>
+      </FormControl>
+
+      {isAdmin && (
+        <Flex alignItems="center" gap={4} pb={4}>
+          <Button colorScheme="teal" onClick={handleSubmit}>
+            Update
+          </Button>
+          <Button colorScheme="red" onClick={() => router.push('/questions')}>
+            Cancel
+          </Button>
+        </Flex>
+      )}
     </Box>
   );
 }

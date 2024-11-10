@@ -35,3 +35,29 @@ export type QuestionHistoryDocument = QuestionHistory & Document;
 
 export const QuestionHistorySchema =
   SchemaFactory.createForClass(QuestionHistory);
+
+@Schema()
+export class AttemptHistory {
+  @Prop()
+  studentId: string;
+
+  @Prop()
+  questionId: string;
+
+  @Prop()
+  roomId: string;
+
+  @Prop()
+  timeAttempted: Date;
+
+  @Prop()
+  programmingLanguage: string;
+
+  @Prop()
+  attemptCode: string;
+}
+
+export type AttemptHistoryDocument = AttemptHistory & Document;
+
+export const AttemptHistorySchema =
+  SchemaFactory.createForClass(AttemptHistory);

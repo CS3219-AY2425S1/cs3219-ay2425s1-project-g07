@@ -9,3 +9,12 @@ export type QuestionHistory = {
   timeAttempted: Date;
   timeCreated: Date;
 };
+
+export type AttemptHistory = {
+  studentId: string;
+  questionId: string;
+  roomId: string;
+  timeAttempted: Date;
+  programmingLanguage: string;
+  attemptCode: string;
+};

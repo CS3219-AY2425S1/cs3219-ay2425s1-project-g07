@@ -64,3 +64,38 @@ export class CreateQuestionHistoryDto {
 }
 
 export class UpdateQuestionHistoryDto extends CreateQuestionHistoryDto {}
+
+export class CreateAttemptHistoryDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly studentId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly questionId: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly roomId: string;
+
+  @ApiProperty()
+  @IsDate()
+  @IsNotEmpty()
+  @Type(() => Date)
+  readonly timeAttempted: Date;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly programmingLanguage: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly attemptCode: string;
+}
+
+export class UpdateAttemptHistoryDto extends CreateAttemptHistoryDto {}

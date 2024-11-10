@@ -93,6 +93,19 @@ export const ProfileCard = () => {
 			return;
 		}
 
+		if (/\s/.test(newUsername)) {
+			toast.closeAll();
+			toast({
+				title: 'Error',
+				description: 'Username cannot contain spaces',
+				status: 'error',
+				duration: 3000,
+				isClosable: true,
+				position: "top"
+			});
+			return;
+		}
+
 		try {
 			await updateUser(userId, { username: newUsername, email: newEmail });
 			toast.closeAll();
@@ -125,12 +138,6 @@ export const ProfileCard = () => {
 	return (
 		<Card backgroundColor={"#FFFFFF"} minWidth={320} maxWidth={360}>
 			<HStack>
-				<Avatar
-					size="2xl"
-					name={username}
-					src="https://cdn-icons-png.flaticon.com/128/17446/17446833.png"
-					margin="30px"
-				/>
 				<VStack align="left" margin="10px">
 					<Tag
 						size="sm"
