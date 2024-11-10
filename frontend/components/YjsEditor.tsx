@@ -409,8 +409,18 @@ const YjsEditor = ({
   }, [provider, currentUser, currentLanguage, toast]);
 
   const saveAttempt = (attempt: AttemptHistory) => {
-    assert(connectedUsers.length > 0, "No connected users found");
-    assert(connectedUsers.length === 2, "Only 2 users can be connected");
+    if (connectedUsers.length !== 2) {
+      toast.closeAll();
+      toast({
+        title: "Error",
+        description: "Both users must be connected to submit code.",
+        status: "error",
+        duration: 2000,
+        isClosable: true,
+        position: "top",
+      });
+      return;
+    }
 
     addAttemptHistory(attempt);
 
