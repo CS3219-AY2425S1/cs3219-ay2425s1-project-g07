@@ -74,15 +74,6 @@ describe('GatewayController', () => {
     );
   });
 
-  it('should handle create-room requests for collab service', async () => {
-    await gatewayController.handleCreateRoomRequest(mockReq, mockRes);
-    expect(gatewayService.handleRedirectRequest).toHaveBeenCalledWith(
-      mockReq,
-      mockRes,
-      'http://collab-service'
-    );
-  });
-
   it('should handle room-related requests for collab service', async () => {
     await gatewayController.handleRoomRequest(mockReq, mockRes);
     expect(gatewayService.handleRedirectRequest).toHaveBeenCalledWith(

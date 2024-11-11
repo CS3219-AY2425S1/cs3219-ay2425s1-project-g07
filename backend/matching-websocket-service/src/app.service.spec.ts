@@ -144,20 +144,4 @@ describe('MatchingWebSocketService', () => {
       expect(result).toBe(false);
     });
   });
-
-  describe('createCollabRoom', () => {
-    it('should send a request to create a collaboration room', async () => {
-      configService.get = jest.fn().mockReturnValue('http://collab-service');
-      axios.post = jest.fn().mockResolvedValue({ data: { success: true } });
-      redisClient.connect = jest.fn().mockReturnThis()
-      const result = await (service as any).createCollabRoom('test-room', 'math', 'easy');
-
-      expect(axios.post).toHaveBeenCalledWith('http://collab-service/create-room', {
-        roomId: 'test-room',
-        topic: 'math',
-        difficulty: 'easy',
-      });
-      expect(result).toEqual({ success: true });
-    });
-  });
 });

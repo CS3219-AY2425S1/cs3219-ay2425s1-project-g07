@@ -3,14 +3,12 @@ import { QuestionController } from './question.controller';
 import { QuestionService } from '../services/question.service';
 import { CreateQuestionDto, UpdateQuestionDto, FilterQuestionsDto } from '../dto/question.dto';
 import { Question, QuestionComplexity, QuestionTopic } from '../schemas/question.schema';
-import { NotFoundException } from '@nestjs/common';
 
 describe('QuestionController', () => {
   let controller: QuestionController;
   let questionService: QuestionService;
 
   const mockQuestionService = {
-    health: jest.fn().mockReturnValue("OK"),
     create: jest.fn(),
     findAll: jest.fn(),
     getRandomQuestion: jest.fn(),
@@ -46,7 +44,8 @@ describe('QuestionController', () => {
         complexity: QuestionComplexity.EASY, 
         topics: [QuestionTopic.ARRAY, QuestionTopic.BINARY],
         description: 'test description',
-        link: 'test-link'
+        link: 'test-link',
+        solution: 'test-solution',
       };
       const createdQuestion = { ...createQuestionDto };
       mockQuestionService.create.mockResolvedValue(createdQuestion);
@@ -65,7 +64,8 @@ describe('QuestionController', () => {
           complexity: QuestionComplexity.EASY, 
           topics: [QuestionTopic.ARRAY, QuestionTopic.BINARY],
           description: 'test description',
-          link: 'test-link'
+          link: 'test-link',
+          solution: 'test-solution',
         }
       ];
       mockQuestionService.findAll.mockResolvedValue(questions);
@@ -87,7 +87,8 @@ describe('QuestionController', () => {
         complexity: QuestionComplexity.HARD, 
         topics: [QuestionTopic.ARRAY, QuestionTopic.BINARY],
         description: 'A hard question',
-        link: 'hello.com'
+        link: 'hello.com',
+        solution: 'test-solution',
       };
       mockQuestionService.getRandomQuestion.mockResolvedValue(randomQuestion);
       const result = await controller.getRandomQuestion(filterDto);
@@ -108,7 +109,8 @@ describe('QuestionController', () => {
         complexity: QuestionComplexity.HARD, 
         topics: [QuestionTopic.ARRAY, QuestionTopic.BINARY],
         description: 'A hard question',
-        link: 'hello.com'
+        link: 'hello.com',
+        solution: 'test-solution',
       }];
       mockQuestionService.filterQuestions.mockResolvedValue(filteredQuestions);
       const result = await controller.filterQuestions(filterDto);
@@ -126,7 +128,8 @@ describe('QuestionController', () => {
         complexity: QuestionComplexity.HARD, 
         topics: [QuestionTopic.ARRAY, QuestionTopic.BINARY],
         description: 'A hard question',
-        link: 'hello.com'
+        link: 'hello.com',
+        solution: 'test-solution',
       };
       mockQuestionService.findOne.mockResolvedValue(question);
       const result = await controller.findOne('126');
@@ -143,8 +146,9 @@ describe('QuestionController', () => {
         title: 'Updated Title', 
         complexity: QuestionComplexity.HARD, 
         topics: [QuestionTopic.STACK],
-        description: "deleting question",
+        description: 'deleting question',
         link: 'test-link',
+        solution: 'test-solution',
       };
       mockQuestionService.update.mockResolvedValue(updatedQuestion);
       const result = await controller.update('127', updateDto);
@@ -160,8 +164,9 @@ describe('QuestionController', () => {
         title: 'To Be Deleted', 
         complexity: QuestionComplexity.EASY, 
         topics: [QuestionTopic.STACK],
-        description: "deleting question",
+        description: 'deleting question',
         link: 'test-link',
+        solution: 'test-solution',
       };
       mockQuestionService.delete.mockResolvedValue(deletedQuestion);
       const result = await controller.delete('128');

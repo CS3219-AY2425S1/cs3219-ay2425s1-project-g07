@@ -49,8 +49,9 @@ describe('QuestionService', () => {
         title: 'New Question',
         complexity: QuestionComplexity.EASY,
         topics: [QuestionTopic.BINARY],
-        description: "test-question",
-        link: "test-link",
+        description: 'test-question',
+        link: 'test-link',
+        solution: 'test-solution',
       };
       // modified service with a different mockQuestionModel
       const mockQuestionModel2 = jest.fn().mockImplementation((createQuestionDto) => ({
@@ -79,8 +80,9 @@ describe('QuestionService', () => {
         title: 'Duplicate Title', 
         complexity: QuestionComplexity.EASY, 
         topics: [QuestionTopic.BINARY],
-        description: "test-question",
-        link: "test-link",
+        description: 'test-question',
+        link: 'test-link',
+        solution: 'test-solution'
       };
       jest.spyOn(service, 'hasQuestionWithTitle').mockResolvedValue(true);
 
@@ -139,10 +141,10 @@ describe('QuestionService', () => {
     });
 
     it('should update a question link', async () => {
-      const updateQuestionDto: UpdateQuestionDto = { link: "hello.com" };
+      const updateQuestionDto: UpdateQuestionDto = { link: 'hello.com' };
       mockQuestionModel.exec = jest.fn().mockResolvedValue({
         ...mockQuestion,
-        link: "hello.com",
+        link: 'hello.com',
       });
       const result = await service.update(mockQuestion._id, updateQuestionDto);
 
