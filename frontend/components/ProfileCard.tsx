@@ -31,6 +31,7 @@ import { AtSignIcon, LinkIcon } from "@chakra-ui/icons";
 import useAuth from "@/hooks/useAuth";
 import { useState, useRef, useEffect } from "react";
 import { deleteUser, updateUser, logout } from "@/services/userService";
+import { updateUserQuestionHistoryRecords, updateUserAttemptHistoryRecords } from "@/services/historyService";
 
 export const ProfileCard = () => {
 	const { username, email, userId, setUsername, setEmail } = useAuth();
@@ -107,6 +108,10 @@ export const ProfileCard = () => {
 		}
 
 		try {
+			if (username != newUsername) {
+				await updateUserAttemptHistoryRecords(username, newUsername);
+				await updateUserQuestionHistoryRecords(userId, username, newUsername);
+			}
 			await updateUser(userId, { username: newUsername, email: newEmail });
 			toast.closeAll();
 			toast({

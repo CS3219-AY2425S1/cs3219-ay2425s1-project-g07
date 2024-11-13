@@ -65,6 +65,12 @@ export class QuestionHistoryService {
     return questionHistory;
   }
 
+  async updateUserHistory(oldUsername: string, newUsername: string): Promise<void> {
+    const updateCond = { collaboratorId: oldUsername };
+    const newContent = { collaboratorId: newUsername };
+    await this.questionHistoryModel.updateMany(updateCond, newContent);
+  }
+
   async findByStudentIdAndRoomId(
     studentId: string,
     roomId: string,
@@ -133,6 +139,12 @@ export class AttemptHistoryService {
       throw new NotFoundException(`AttemptHistory with ID ${id} not found`);
     }
     return attemptHistory;
+  }
+
+  async updateUserAttempt(oldUsername: string, newUsername: string): Promise<void> {
+    const updateCond = { studentId: oldUsername };
+    const newContent = { studentId: newUsername };
+    await this.attemptHistoryModel.updateMany(updateCond, newContent);
   }
 
   async update(
