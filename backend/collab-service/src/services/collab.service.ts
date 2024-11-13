@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 import { Room, RoomResponse } from '../interfaces/room.interface';
 import axios from 'axios';
 import { Question } from '../interfaces/room.interface';
+import { clearInterval } from 'timers';
 import { Consumer, Kafka } from 'kafkajs';
 
 type MatchMessage = {
@@ -17,6 +18,7 @@ type MatchMessage = {
 export class CollabService implements OnModuleInit {
   private rooms: Map<string, Room> = new Map(); // roomId -> Room
   private userRooms: Map<string, string> = new Map(); // userId -> roomId
+  private intervalId: NodeJS.Timeout;
 
   private readonly kafkaBrokerUri: string;
   private readonly consumerGroupId: string;
@@ -192,7 +194,7 @@ export class CollabService implements OnModuleInit {
 
   private cleanUpEmptyRooms() {
     const expiry = 3600 * 1000; // 1 hour in milliseconds
-    setInterval(() => {
+    this.intervalId = setInterval(() => {
       this.rooms.forEach((room, roomId) => {
         if (room.users.size === 0 && room.created.valueOf() + expiry < Date.now()) {
           console.log(`Cleaning up room ${roomId}`);
@@ -202,7 +204,7 @@ export class CollabService implements OnModuleInit {
     }, 5 * 60 * 1000);
   }
 
-  private async getQuestion(topic: string, difficulty: string): Promise<Question> {
+  async getQuestion(topic: string, difficulty: string): Promise<Question> {
     let queryTopic: string, queryDifficulty: string;
     if (topic != 'any') {
         queryTopic = topic;
@@ -215,6 +217,12 @@ export class CollabService implements OnModuleInit {
       params: { topic: queryTopic, difficulty: queryDifficulty }
     });
     return response.data as Question;
+  }
+
+
+  // For testing or onDestroy
+  clearIntervals() {
+    clearInterval(this.intervalId);
   }
 
   private getKafkaBrokerUri(): string {

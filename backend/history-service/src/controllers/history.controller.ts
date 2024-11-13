@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Query,
   Param,
   Put,
   Delete,
@@ -11,18 +10,18 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { QuestionHistory, AttemptHistory } from 'src/schemas/history.schema';
+import { QuestionHistory, AttemptHistory } from '../schemas/history.schema';
 import {
   QuestionHistoryService,
   AttemptHistoryService,
-} from 'src/services/history.services';
+} from '../services/history.services';
 import {
   CreateQuestionHistoryDto,
   UpdateQuestionHistoryDto,
   CreateAttemptHistoryDto,
   UpdateAttemptHistoryDto,
   UpdateUserRecordDto,
-} from 'src/dto/history.dto';
+} from '../dto/history.dto';
 
 @Controller('history/questions')
 @ApiTags('history/questions')
