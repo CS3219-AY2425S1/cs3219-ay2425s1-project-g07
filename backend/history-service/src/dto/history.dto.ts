@@ -65,6 +65,18 @@ export class CreateQuestionHistoryDto {
 
 export class UpdateQuestionHistoryDto extends CreateQuestionHistoryDto {}
 
+export class UpdateUserRecordDto {
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly oldUsername: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
+  readonly newUsername: string;
+}
+
 export class CreateAttemptHistoryDto {
   @ApiProperty()
   @IsString()

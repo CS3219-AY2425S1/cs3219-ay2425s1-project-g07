@@ -21,6 +21,7 @@ import {
   UpdateQuestionHistoryDto,
   CreateAttemptHistoryDto,
   UpdateAttemptHistoryDto,
+  UpdateUserRecordDto,
 } from 'src/dto/history.dto';
 
 @Controller('history/questions')
@@ -35,6 +36,13 @@ export class QuestionHistoryController {
     @Param('studentId') studentId: string,
   ): Promise<QuestionHistory[]> {
     return this.questionHistoryService.findAllByStudentId(studentId);
+  }
+
+  @Put('student/:studentId')
+  async updateUserRecord(
+    @Body() updateDto: UpdateUserRecordDto,
+  ): Promise<void> {
+    await this.questionHistoryService.updateUserHistory(updateDto.oldUsername, updateDto.newUsername);
   }
 
   @Get('student/:studentId/room/:roomId')
@@ -98,6 +106,13 @@ export class AttemptHistoryController {
         new Date(a.timeAttempted).getTime(),
     );
     return this.attemptHistoryService.findAllByStudentId(studentId);
+  }
+
+  @Put('student/:studentId')
+  async updateUserRecord(
+    @Body() updateDto: UpdateUserRecordDto,
+  ): Promise<void> {
+    await this.attemptHistoryService.updateUserAttempt(updateDto.oldUsername, updateDto.newUsername);
   }
 
   @Get('student/:studentId/question/:questionId')

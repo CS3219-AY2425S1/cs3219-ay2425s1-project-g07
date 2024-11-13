@@ -87,3 +87,40 @@ export const getAttemptHistoryForSession = async (
     throw error;
   }
 };
+
+export const updateUserQuestionHistoryRecords = async (
+  studentId: string,
+  oldUsername: string,
+  newUsername: string
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `/history/questions/student/${studentId}`,
+      {
+        oldUsername: oldUsername,
+        newUsername: newUsername,
+      }
+    );
+  } catch (error) {
+    console.error("Error getting history:", error);
+    throw error;
+  }
+};
+
+export const updateUserAttemptHistoryRecords = async (
+  oldUsername: string,
+  newUsername: string
+) => {
+  try {
+    const response = await axiosInstance.put(
+      `/history/attempts/student/${oldUsername}`,
+      {
+        oldUsername: oldUsername,
+        newUsername: newUsername,
+      }
+    );
+  } catch (error) {
+    console.error("Error getting attempts:", error);
+    throw error;
+  }
+}
