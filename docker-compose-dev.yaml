@@ -1,0 +1,186 @@
+# Specify the version of the Docker Compose.
+version: "3.9"
+
+services:
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    # volumes:
+    #   - ./frontend:/app
+    ports:
+      - "3000:3000"
+
+  api-gateway:
+    build:
+      context: ./backend/api-gateway
+      dockerfile: Dockerfile.dev
+    environment:
+      QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+      USER_SERVICE_DOMAIN: ${USER_SERVICE_DOMAIN}
+    ports:
+      - "8000:8000"
+    # volumes:
+    #   - ./backend/api-gateway:/app
+
+  question-app:
+    build:
+      context: ./backend/question-service
+      dockerfile: Dockerfile.dev
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_NAME: ${MONGODB_NAME}
+    ports:
+      - "8001:8001"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8001/question/health || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
+      start_period: 3s
+    # volumes:
+    #   - ./backend/question-service:/app
+
+  matching-app:
+    build:
+      context: ./backend/matching-service
+      dockerfile: Dockerfile.dev
+    environment:
+      KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
+      MATCHING_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_SERVICE_CONSUMER_GROUP_ID}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8002:8002"
+    # volumes:
+    #   - ./backend/matching-service:/app
+
+  matching-websocket:
+    build:
+      context: ./backend/matching-websocket-service
+      dockerfile: Dockerfile.dev
+    environment:
+      KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
+      MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID: ${MATCHING_WEBSOCKET_SERVICE_CONSUMER_GROUP_ID}
+      COLLAB_SERVICE_DOMAIN: ${COLLAB_SERVICE_DOMAIN}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8008:8008"
+    # volumes:
+    #   - ./backend/matching-websocket-service:/app
+
+  collab-app:
+    build:
+      context: ./backend/collab-service
+      dockerfile: Dockerfile.dev
+    environment:
+      QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+      KAFKA_BROKER_URI: ${KAFKA_BROKER_URI}
+      COLLAB_SERVICE_CONSUMER_GROUP_ID: ${COLLAB_SERVICE_CONSUMER_GROUP_ID}
+    depends_on:
+      question-app:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8007:8007"
+    # volumes:
+    #   - ./backend/collab-service:/app
+
+  chat-app:
+    build:
+      context: ./backend/chat-service
+      dockerfile: Dockerfile.dev
+    environment:
+      QUESTION_SERVICE_DOMAIN: ${QUESTION_SERVICE_DOMAIN}
+    ports:
+      - "8009:8009"
+    # volumes:
+    #   - ./backend/chat-service:/app
+
+  user-app:
+    build:
+      context: ./backend/user-service
+      dockerfile: Dockerfile.dev
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
+      DB_CLOUD_URI: ${DB_CLOUD_URI}
+      DB_LOCAL_URI: ${DB_LOCAL_URI}
+      PORT: ${PORT}
+      ENV: ${ENV}
+    ports:
+      - "8003:8003"
+    # volumes:
+    #   - ./backend/user-service:/app
+    depends_on:
+      - user-service-db
+
+  user-service-db:
+    container_name: user-service-db
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep mongod"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    command: mongod --quiet --logpath /dev/null
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 8004
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    hostname: kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:8004
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_BROKER_URI},PLAINTEXT_HOST://localhost:28005
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 28005 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8006:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+    volumes:
+      - ./backend/kui/config.yaml:/etc/kafkaui/dynamic_config.yaml
+
+  redis:
+    container_name: matching-redis
+    image: redis:latest
+    # No need to expose the port as it is only used internally (6379)
+
+  history-service:
+    container_name: history-service
+    build:
+      context: ./backend/history-service
+      dockerfile: Dockerfile.dev
+    environment:
+      MONGODB_URI: ${MONGODB_URI}
+      MONGODB_NAME: ${MONGODB_NAME}
+      PORT: ${HISTORY_SERVICE_PORT}
+      HISTORY_SERVICE_MONGODB_URI: ${HISTORY_SERVICE_MONGODB_URI}
+    ports:
+      - ${HISTORY_SERVICE_PORT}:${HISTORY_SERVICE_PORT}
