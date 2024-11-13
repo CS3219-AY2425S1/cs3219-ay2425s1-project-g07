@@ -42,10 +42,6 @@ export class GatewayController {
   }
 
   // Collab service http endpoints
-  @All('create-room')
-  async handleCreateRoomRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
-    this.gatewayService.handleRedirectRequest(req, res, this.collabServiceDomain)
-  }
   @All('rooms*')
   async handleRoomRequest(@Req() req: Request, @Res() res: Response): Promise<void> {
     this.gatewayService.handleRedirectRequest(req, res, this.collabServiceDomain)
