@@ -10,6 +10,10 @@ import {
   Th,
   Td,
   TableContainer,
+  Flex,
+  Tooltip,
+  Icon,
+  Text,
 } from "@chakra-ui/react";
 import useAuth from "@/hooks/useAuth";
 import { getQuestionHistory } from "@/services/historyService";
@@ -17,6 +21,7 @@ import { QuestionHistory } from "@/types/History";
 import { QuestionComplexity } from "@/types/Question";
 import { difficultyText } from "@/app/utils";
 import { useRouter } from "next/navigation";
+import { RxOpenInNewWindow } from "react-icons/rx";
 
 export const QuestionHistoryCard = () => {
   const [history, setHistory] = useState<QuestionHistory[]>([]);
@@ -31,7 +36,7 @@ export const QuestionHistoryCard = () => {
     });
   }, [userId]);
 
-  const headers = ["Question", "Difficulty", "Collaborator", "Date"];
+  const headers = ["Question", "Difficulty", "Collaborator", "Date", "Action"];
 
   const handleClick = (item: QuestionHistory) => {
     router.push(`/attempts/${item.roomId}`);
@@ -39,6 +44,9 @@ export const QuestionHistoryCard = () => {
 
   return (
     <Card backgroundColor={"#FFFFFF"}>
+      <Flex justifyContent="center" padding="4">
+        <Text fontWeight="bold">Recent Sessions</Text>
+      </Flex>
       <TableContainer>
         <Table variant="simple">
           <Thead>
@@ -50,7 +58,7 @@ export const QuestionHistoryCard = () => {
           </Thead>
           <Tbody>
             {history.map((item, index) => (
-              <Tr key={index} onClick={() => handleClick(item)}>
+              <Tr key={index}>
                 <Td>{item.questionTitle}</Td>
                 <Td>
                   {difficultyText(
@@ -59,6 +67,20 @@ export const QuestionHistoryCard = () => {
                 </Td>
                 <Td>{item.collaboratorId}</Td>
                 <Td>{item.timeAttempted.toLocaleDateString()}</Td>
+                <Td>
+                  <Flex className="justify-center">
+                    <Tooltip content="See Details" aria-label="See Details">
+                      <Icon
+                        onClick={() => handleClick(item)}
+                        fontSize="20px"
+                        color="gray"
+                        cursor="pointer"
+                      >
+                        <RxOpenInNewWindow />
+                      </Icon>
+                    </Tooltip>
+                  </Flex>
+                </Td>
               </Tr>
             ))}
           </Tbody>
